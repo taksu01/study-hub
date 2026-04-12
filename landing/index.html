@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Study Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: #0a0a0f;
+      color: #e4e4e7;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: .5rem;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      color: #a1a1aa;
+      font-size: 1.1rem;
+      margin-bottom: 3rem;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      max-width: 720px;
+      width: 100%;
+    }
+
+    @media (max-width: 600px) {
+      .cards { grid-template-columns: 1fr; }
+      h1 { font-size: 1.75rem; }
+    }
+
+    .card {
+      position: relative;
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 1rem;
+      padding: 2rem;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+      overflow: hidden;
+    }
+
+    .card:hover {
+      border-color: #3f3f46;
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(0,0,0,.4);
+    }
+
+    .card-icon {
+      font-size: 2.25rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .card h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: .5rem;
+    }
+
+    .card p {
+      color: #a1a1aa;
+      font-size: .9rem;
+      line-height: 1.5;
+    }
+
+    .card .arrow {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      color: #52525b;
+      transition: color 0.2s, transform 0.2s;
+    }
+
+    .card:hover .arrow {
+      color: #e4e4e7;
+      transform: translateX(3px);
+    }
+
+    footer {
+      margin-top: 4rem;
+      color: #52525b;
+      font-size: .8rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Study Hub</h1>
+  <p class="subtitle">Interactive study guides &amp; knowledge bases</p>
+
+  <div class="cards">
+    <a class="card" href="./bitcoin-study/">
+      <span class="card-icon">&#8383;</span>
+      <svg class="arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      <h2>Bitcoin Study Guide</h2>
+      <p>Interactive knowledge base covering Bitcoin fundamentals, mining, mempool, blockchain, Merkle trees, and live simulations.</p>
+    </a>
+
+    <a class="card" href="./invest-study/">
+      <span class="card-icon">&#128200;</span>
+      <svg class="arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      <h2>Investor's Mental Model</h2>
+      <p>14-section interactive dashboard covering investing fundamentals, from big picture strategy to building your final mental model.</p>
+    </a>
+  </div>
+
+  <footer>&copy; 2026 Study Hub</footer>
+</body>
+</html>
