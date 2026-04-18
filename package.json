@@ -3,8 +3,5 @@
   "private": true,
   "workspaces": [
     "apps/*"
-  ],
-  "dependencies": {
-    "app-super-monorepo": "file:.."
-  }
+  ]
 }
