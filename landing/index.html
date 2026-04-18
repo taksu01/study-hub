@@ -37,10 +37,14 @@
 
     .cards {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, 1fr);
       gap: 1.5rem;
-      max-width: 720px;
+      max-width: 1080px;
       width: 100%;
+    }
+
+    @media (max-width: 900px) {
+      .cards { grid-template-columns: 1fr 1fr; max-width: 720px; }
     }
 
     @media (max-width: 600px) {
@@ -121,6 +125,13 @@
       <svg class="arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
       <h2>Investor's Mental Model</h2>
       <p>14-section interactive dashboard covering investing fundamentals, from big picture strategy to building your final mental model.</p>
+    </a>
+
+    <a class="card" href="./math-speeed/">
+      <span class="card-icon">&#129504;</span>
+      <svg class="arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      <h2>Math Speeed</h2>
+      <p>Mental math practice game — multiple modes, difficulty levels, and operations with a kawaii mascot cheering you on. Great for keeping your calc muscle sharp.</p>
     </a>
   </div>
 

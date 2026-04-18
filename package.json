@@ -1,5 +1,10 @@
 {
   "name": "study-hub",
   "private": true,
-  "workspaces": ["apps/*"]
+  "workspaces": [
+    "apps/*"
+  ],
+  "dependencies": {
+    "app-super-monorepo": "file:.."
+  }
 }
