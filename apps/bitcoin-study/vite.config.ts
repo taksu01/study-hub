@@ -5,4 +5,5 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig(({ command }) => ({
   base: command === 'build' ? '/study-hub/bitcoin-study/' : '/',
   plugins: [react(), tailwindcss()],
+  server: { host: true },
 }))
