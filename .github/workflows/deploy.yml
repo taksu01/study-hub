@@ -37,6 +37,7 @@ jobs:
       - name: Assemble output
         run: |
           mkdir output
+          touch output/.nojekyll
           cp landing/index.html output/index.html
           mkdir -p output/bitcoin-study output/invest-study output/math-speeed
           cp -r apps/bitcoin-study/dist/* output/bitcoin-study/
