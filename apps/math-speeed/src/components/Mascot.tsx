@@ -1,9 +1,9 @@
 import type { MascotMood } from '../types'
-import idleSrc from '../assets/mascot/idle.png'
-import happySrc from '../assets/mascot/happy.png'
-import surprisedSrc from '../assets/mascot/surprised.png'
-import hypeSrc from '../assets/mascot/hype.png'
-import sleepySrc from '../assets/mascot/sleepy.png'
+import idleSrc from '../assets/mascot/idle.webp'
+import happySrc from '../assets/mascot/happy.webp'
+import surprisedSrc from '../assets/mascot/surprised.webp'
+import hypeSrc from '../assets/mascot/hype.webp'
+import sleepySrc from '../assets/mascot/sleepy.webp'
 
 interface Props {
   mood?: MascotMood
