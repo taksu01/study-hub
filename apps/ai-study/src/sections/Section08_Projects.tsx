@@ -1,7 +1,7 @@
 import {
   SectionShell, SectionHeader, Subsection, Prose,
   ExpandableCardGrid, CauseEffectChain,
-  MiniRecallBlock, CheatSheetPanel, InfoCallout, TryThisCallout
+  MiniRecallBlock, CheatSheetPanel, InfoCallout, TryThisCallout, NumberedSteps
 } from '../components/ui'
 
 export default function Section08() {
@@ -113,6 +113,169 @@ Rules:
 # if signal["risk_level"] == "HIGH": reduce_size(signal)
 # if within_daily_loss_limit(): execute(signal) else: skip()`}
         />
+      </Subsection>
+
+      {/* Crypto Deep Dive */}
+      <Subsection title="Deep Dive: Crypto Trading AI — Full Setup">
+        <Prose>
+          <p>This expands Project 2 into a concrete, runnable crypto trading agent targeting BTC/ETH on Binance (or any exchange supported by ccxt). It fetches real candle data, computes technical indicators, asks Claude to reason about them, and logs signals — with a paper trading mode you can run safely before going live.</p>
+        </Prose>
+        <ExpandableCardGrid columns={2} cards={[
+          {
+            title: 'Stack',
+            subtitle: 'What you need to install',
+            content: 'Python libraries: ccxt, pandas, pandas-ta, anthropic, apscheduler, sqlite3 (built-in)',
+            details: 'pip install ccxt pandas pandas-ta anthropic apscheduler\n\n• ccxt: connects to 100+ exchanges (Binance, Bybit, OKX, Coinbase) with a unified API\n• pandas-ta: computes RSI, MACD, Bollinger Bands, EMA, ATR from OHLCV data\n• anthropic: Claude API for the reasoning engine\n• apscheduler: runs the loop every N minutes without cron\n• sqlite3: logs every signal + outcome for backreview',
+            tags: ['ccxt', 'pandas-ta', 'apscheduler'],
+            color: 'blue',
+          },
+          {
+            title: 'Architecture',
+            subtitle: 'How the pieces connect',
+            content: 'Scheduler → fetch candles → compute indicators → build prompt → Claude → parse JSON signal → paper/live trade → log to SQLite',
+            details: 'The agent runs in a loop every 15 minutes. Each cycle:\n1. Fetch last 100 candles (15m or 1h timeframe) via ccxt\n2. Compute RSI(14), MACD, BB, EMA(20/50) with pandas-ta\n3. Format as a compact table for the LLM prompt\n4. Send to Claude Haiku (fast + cheap for frequent calls)\n5. Parse structured JSON signal\n6. In paper mode: log to SQLite. In live mode: place order via ccxt.',
+            tags: ['15-minute loop', 'SQLite logging'],
+            color: 'purple',
+          },
+        ]} />
+
+        <NumberedSteps steps={[
+          {
+            title: 'Set up exchange API keys (read-only first)',
+            description: 'Log in to Binance (or your exchange) → API Management → Create API. Enable "Read Info" only. DO NOT enable trading until you\'ve paper-traded successfully for at least 2 weeks.',
+            code: '# Store credentials in a .env file, never in code\nBINANCE_API_KEY=your_key_here\nBINANCE_SECRET=your_secret_here\nANTHROPIC_API_KEY=your_anthropic_key',
+          },
+          {
+            title: 'Fetch candle data with ccxt',
+            description: 'ccxt gives you a unified interface to any exchange. Fetch OHLCV (Open, High, Low, Close, Volume) candles for your chosen pair and timeframe.',
+            code: 'import ccxt, pandas as pd\nexchange = ccxt.binance({"apiKey": KEY, "secret": SECRET})\nohlcv = exchange.fetch_ohlcv("BTC/USDT", "15m", limit=100)\ndf = pd.DataFrame(ohlcv, columns=["ts","open","high","low","close","vol"])',
+          },
+          {
+            title: 'Compute technical indicators with pandas-ta',
+            description: 'One line adds all the standard indicators to your DataFrame. pandas-ta computes them directly from the OHLCV data.',
+            code: 'import pandas_ta as ta\ndf.ta.rsi(length=14, append=True)    # RSI_14\ndf.ta.macd(append=True)              # MACD_12_26_9\ndf.ta.bbands(length=20, append=True) # BBL, BBM, BBU\ndf.ta.ema(length=20, append=True)    # EMA_20\ndf.ta.ema(length=50, append=True)    # EMA_50',
+          },
+          {
+            title: 'Format data as a compact LLM prompt',
+            description: 'Take only the last 5 candles + current indicator values. Don\'t dump the whole DataFrame — context matters but noise hurts reasoning.',
+            code: '# Get latest values\nr = df.iloc[-1]\nprompt = f"""BTC/USDT 15m — {pd.Timestamp(r.ts, unit="ms")}\nPrice: {r.close:.2f} | Vol: {r.vol:.0f}\nRSI(14): {r.RSI_14:.1f} | EMA20: {r.EMA_20:.2f} | EMA50: {r.EMA_50:.2f}\nMACD: {r.MACD_12_26_9:.2f} | Signal: {r.MACDs_12_26_9:.2f}\nBB Upper: {r.BBU_20_2.0:.2f} | BB Lower: {r.BBL_20_2.0:.2f}\n24h change: {((r.close/df.iloc[-96].close)-1)*100:.2f}%"""',
+          },
+          {
+            title: 'Call Claude and parse the signal',
+            description: 'Use Claude Haiku for speed and cost (you\'ll call this every 15 minutes). Enforce JSON output via tool calling.',
+            code: 'import anthropic, json\nclient = anthropic.Anthropic()\nresponse = client.messages.create(\n    model="claude-haiku-4-5-20251001",\n    max_tokens=300,\n    system=SYSTEM_PROMPT,  # see TryThis box below\n    messages=[{"role": "user", "content": prompt}]\n)\nsignal = json.loads(response.content[0].text)',
+          },
+          {
+            title: 'Log to SQLite (paper trading)',
+            description: 'Every signal gets logged with the full reasoning. Review your log after a week — see if the signals were good before trusting live execution.',
+            code: 'import sqlite3\ncon = sqlite3.connect("trades.db")\ncon.execute("""CREATE TABLE IF NOT EXISTS signals\n  (ts TEXT, pair TEXT, signal TEXT, confidence REAL,\n   price REAL, reasoning TEXT, executed INTEGER)""")\ncon.execute("INSERT INTO signals VALUES (?,?,?,?,?,?,?)",\n  (str(pd.Timestamp.now()), "BTC/USDT",\n   signal["signal"], signal["confidence"],\n   r.close, signal["reasoning"], 0))  # 0 = paper\ncon.commit()',
+          },
+          {
+            title: 'Add live execution (after 2+ weeks paper trading)',
+            description: 'Only when your paper results look good. Enable "Spot Trading" on your API key. Add strict guards in code before this step runs.',
+            code: '# Only execute if ALL guards pass:\nif (signal["signal"] != "HOLD"\n    and signal["confidence"] >= 0.80\n    and signal["risk_level"] != "HIGH"\n    and within_daily_loss_limit(con)\n    and not position_too_large(exchange)):\n    order = exchange.create_market_order(\n        "BTC/USDT", signal["signal"].lower(), amount)\n    log_execution(con, order)',
+          },
+        ]} />
+
+        <TryThisCallout
+          title="System Prompt for Crypto Agent"
+          prompt={`SYSTEM_PROMPT = """You are a quantitative crypto analyst specializing in technical analysis.
+You receive 15-minute candle data with technical indicators for a crypto pair.
+Your job: provide a trading signal based ONLY on the provided data.
+
+ALWAYS respond in this exact JSON (no prose, no markdown):
+{
+  "signal": "BUY" | "SELL" | "HOLD",
+  "confidence": 0.0-1.0,
+  "risk_level": "LOW" | "MEDIUM" | "HIGH",
+  "reasoning": "max 2 sentences explaining the signal",
+  "key_indicator": "which indicator drove this decision",
+  "invalidation": "what would make this signal wrong"
+}
+
+Signal rules:
+- BUY only when confidence >= 0.75 AND risk_level != HIGH
+- SELL only when confidence >= 0.75 AND risk_level != HIGH
+- Default to HOLD when uncertain — missing a trade is better than a bad trade
+- Consider trend (EMA20 vs EMA50), momentum (RSI, MACD), and levels (Bollinger Bands)
+- RSI > 70 = overbought warning. RSI < 30 = oversold opportunity.
+- Never base signal on a single indicator
+"""
+
+# Example output you should get:
+# {
+#   "signal": "BUY",
+#   "confidence": 0.78,
+#   "risk_level": "MEDIUM",
+#   "reasoning": "RSI recovering from 32 with MACD crossover above signal line. Price touching lower BB.",
+#   "key_indicator": "MACD crossover + RSI divergence",
+#   "invalidation": "Close below BBL_20 would negate the bounce setup"
+# }`}
+        />
+
+        <TryThisCallout
+          title="Full Runnable Agent Loop (save as crypto_agent.py)"
+          prompt={`import ccxt, pandas as pd, pandas_ta as ta
+import anthropic, json, sqlite3, os
+from apscheduler.schedulers.blocking import BlockingScheduler
+from dotenv import load_dotenv
+
+load_dotenv()
+exchange = ccxt.binance({"apiKey": os.getenv("BINANCE_API_KEY"),
+                          "secret": os.getenv("BINANCE_SECRET")})
+client = anthropic.Anthropic()
+PAPER_MODE = True  # Set to False only after 2+ weeks of paper validation
+
+def get_signal(pair="BTC/USDT", timeframe="15m"):
+    # 1. Fetch data
+    ohlcv = exchange.fetch_ohlcv(pair, timeframe, limit=100)
+    df = pd.DataFrame(ohlcv, columns=["ts","open","high","low","close","vol"])
+    # 2. Indicators
+    df.ta.rsi(length=14, append=True)
+    df.ta.macd(append=True)
+    df.ta.bbands(length=20, append=True)
+    df.ta.ema(length=20, append=True)
+    df.ta.ema(length=50, append=True)
+    r = df.iloc[-1]
+    # 3. Prompt
+    prompt = (f"{pair} {timeframe} | Price: {r.close:.2f} | "
+              f"RSI: {r.RSI_14:.1f} | EMA20: {r.EMA_20:.2f} | "
+              f"EMA50: {r.EMA_50:.2f} | MACD: {r.MACD_12_26_9:.4f} | "
+              f"BB: {r.BBL_20_2_0:.2f}–{r.BBU_20_2_0:.2f}")
+    # 4. LLM
+    resp = client.messages.create(
+        model="claude-haiku-4-5-20251001", max_tokens=300,
+        system=SYSTEM_PROMPT,
+        messages=[{"role": "user", "content": prompt}])
+    signal = json.loads(resp.content[0].text)
+    signal["price"] = r.close
+    signal["pair"] = pair
+    return signal
+
+def run_cycle():
+    signal = get_signal()
+    print(f"[{pd.Timestamp.now()}] {signal['pair']}: {signal['signal']} "
+          f"(conf={signal['confidence']:.2f}) — {signal['reasoning']}")
+    # Log to SQLite
+    con = sqlite3.connect("trades.db")
+    con.execute("CREATE TABLE IF NOT EXISTS signals "
+                "(ts,pair,signal,confidence,price,risk,reasoning,paper)")
+    con.execute("INSERT INTO signals VALUES (?,?,?,?,?,?,?,?)",
+                (str(pd.Timestamp.now()), signal["pair"], signal["signal"],
+                 signal["confidence"], signal["price"],
+                 signal["risk_level"], signal["reasoning"], int(PAPER_MODE)))
+    con.commit(); con.close()
+
+scheduler = BlockingScheduler()
+scheduler.add_job(run_cycle, "interval", minutes=15)
+print("Crypto AI agent started — paper mode:", PAPER_MODE)
+run_cycle()  # Run once immediately
+scheduler.start()`}
+        />
+
+        <InfoCallout type="warning">
+          <strong>Before going live:</strong> Run in PAPER_MODE=True for at least 2 weeks. Review your SQLite log — check win rate by signal type, average confidence vs actual outcome, and whether the agent outperforms a simple buy-and-hold. If it doesn't beat the baseline, don't trust it with real money. Start with a position size you're comfortable losing entirely.
+        </InfoCallout>
       </Subsection>
 
       {/* Project 3 */}
