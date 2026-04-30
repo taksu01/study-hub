@@ -2,12 +2,12 @@ import { type ReactNode, useState } from 'react'
 import {
   ChevronDown, ChevronRight, AlertTriangle, Lightbulb,
   BookOpen, CheckCircle2, ArrowRight, HelpCircle, Info, X,
-  Zap, Copy, Check
+  Zap, Copy, Check, Brain, Cloud, Cpu
 } from 'lucide-react'
 import type {
   Term, Confusion, RecallQuestion, CheatSheetItem,
   FlowNode, CompareRow, ExpandableCard as ExpandableCardType,
-  CauseEffect
+  CauseEffect, TaxonomyNode, ModelCard
 } from '../types'
 
 /* ── Section Shell ────────────────────────────────── */
@@ -97,6 +97,237 @@ export function InteractiveFlowMap({ nodes, vertical }: { nodes: FlowNode[]; ver
           <p className="text-sm text-slate-600">{activeNode.description}</p>
         </div>
       )}
+    </div>
+  )
+}
+
+/* ── Taxonomy Tree ────────────────────────────────── */
+const taxColors: Record<string, { pill: string; ring: string }> = {
+  slate:  { pill: 'bg-slate-100 border-slate-300 text-slate-700',    ring: 'ring-slate-400' },
+  blue:   { pill: 'bg-blue-50 border-blue-300 text-blue-800',        ring: 'ring-blue-400' },
+  indigo: { pill: 'bg-indigo-50 border-indigo-300 text-indigo-800',  ring: 'ring-indigo-400' },
+  violet: { pill: 'bg-violet-50 border-violet-300 text-violet-800',  ring: 'ring-violet-400' },
+  purple: { pill: 'bg-purple-50 border-purple-300 text-purple-800',  ring: 'ring-purple-400' },
+  pink:   { pill: 'bg-pink-50 border-pink-300 text-pink-800',        ring: 'ring-pink-400' },
+  orange: { pill: 'bg-amber-50 border-amber-300 text-amber-800',     ring: 'ring-amber-400' },
+  teal:   { pill: 'bg-teal-50 border-teal-300 text-teal-800',        ring: 'ring-teal-400' },
+  green:  { pill: 'bg-emerald-50 border-emerald-300 text-emerald-800', ring: 'ring-emerald-400' },
+}
+
+function TaxTreeNode({
+  node,
+  depth,
+  selected,
+  onSelect,
+}: {
+  node: TaxonomyNode
+  depth: number
+  selected: string | null
+  onSelect: (id: string | null) => void
+}) {
+  const [expanded, setExpanded] = useState(true)
+  const isSelected = selected === node.id
+  const hasChildren = (node.children?.length ?? 0) > 0
+  const c = taxColors[node.color || 'slate']
+
+  return (
+    <div>
+      <div className="flex items-center gap-1.5">
+        {hasChildren ? (
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="w-5 h-5 flex items-center justify-center rounded hover:bg-slate-100 text-slate-400 flex-shrink-0 cursor-pointer transition-colors"
+          >
+            {expanded
+              ? <ChevronDown className="w-3.5 h-3.5" />
+              : <ChevronRight className="w-3.5 h-3.5" />}
+          </button>
+        ) : (
+          <div className="w-5 flex-shrink-0" />
+        )}
+
+        <button
+          onClick={() => onSelect(isSelected ? null : node.id)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-medium transition-all cursor-pointer
+            ${c.pill}
+            ${isSelected
+              ? `ring-2 ring-offset-1 ${c.ring} shadow-md scale-[1.02]`
+              : 'hover:shadow-sm hover:scale-[1.01]'
+            }`}
+        >
+          {node.label}
+          {node.subtitle && (
+            <span className="text-xs font-normal opacity-60 ml-0.5">— {node.subtitle}</span>
+          )}
+        </button>
+      </div>
+
+      {hasChildren && expanded && (
+        <div className="ml-6 mt-2 border-l-2 border-slate-200 pl-4 space-y-2.5 pb-1">
+          {node.children!.map(child => (
+            <TaxTreeNode
+              key={child.id}
+              node={child}
+              depth={depth + 1}
+              selected={selected}
+              onSelect={onSelect}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+export function TaxonomyTree({ nodes }: { nodes: TaxonomyNode[] }) {
+  const [selected, setSelected] = useState<string | null>(null)
+
+  function findNode(list: TaxonomyNode[], id: string): TaxonomyNode | null {
+    for (const n of list) {
+      if (n.id === id) return n
+      if (n.children) {
+        const found = findNode(n.children, id)
+        if (found) return found
+      }
+    }
+    return null
+  }
+
+  const selectedNode = selected ? findNode(nodes, selected) : null
+
+  return (
+    <div className="mb-6">
+      <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-3">
+        <p className="text-xs text-slate-400 mb-4 font-medium uppercase tracking-wide">
+          Click any node to see its definition
+        </p>
+        {nodes.map(n => (
+          <TaxTreeNode
+            key={n.id}
+            node={n}
+            depth={0}
+            selected={selected}
+            onSelect={setSelected}
+          />
+        ))}
+      </div>
+
+      {selectedNode && (
+        <div className="mt-3 p-4 bg-white rounded-xl border border-violet-200 shadow-sm">
+          <div className="flex justify-between items-start mb-2">
+            <div>
+              <h4 className="font-semibold text-slate-800">{selectedNode.label}</h4>
+              {selectedNode.subtitle && (
+                <p className="text-xs text-slate-400 mt-0.5">{selectedNode.subtitle}</p>
+              )}
+            </div>
+            <button
+              onClick={() => setSelected(null)}
+              className="text-slate-400 hover:text-slate-600 cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <p className="text-sm text-slate-600 leading-relaxed">{selectedNode.description}</p>
+          {selectedNode.examples && selectedNode.examples.length > 0 && (
+            <div className="mt-3 flex flex-wrap items-center gap-1.5">
+              <span className="text-xs text-slate-400 font-medium mr-0.5">Examples:</span>
+              {selectedNode.examples.map(e => (
+                <span
+                  key={e}
+                  className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-medium"
+                >
+                  {e}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ── Model Card Grid ──────────────────────────────── */
+function ModelCardItem({ model }: { model: ModelCard }) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <div className={`rounded-xl border bg-white shadow-sm transition-shadow hover:shadow-md flex flex-col ${
+      model.access === 'local' ? 'border-emerald-200' : 'border-slate-200'
+    }`}>
+      <div className="p-4 flex-1">
+        <div className="flex justify-between items-start mb-3">
+          <div>
+            <h4 className="font-bold text-slate-900 text-sm leading-tight">{model.name}</h4>
+            <p className="text-xs text-slate-500 mt-0.5">{model.maker}</p>
+          </div>
+          <div className="flex flex-col gap-1 items-end ml-2">
+            <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex items-center gap-1 ${
+              model.access === 'cloud'
+                ? 'bg-blue-100 text-blue-700'
+                : 'bg-emerald-100 text-emerald-700'
+            }`}>
+              {model.access === 'cloud'
+                ? <><Cloud className="w-2.5 h-2.5" />Cloud</>
+                : <><Cpu className="w-2.5 h-2.5" />Local / Free</>}
+            </span>
+            {model.modelType === 'reasoning' && (
+              <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-purple-100 text-purple-700 flex items-center gap-1">
+                <Brain className="w-2.5 h-2.5" />Reasoning
+              </span>
+            )}
+            {model.multimodal && (
+              <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-teal-100 text-teal-700">
+                Multimodal
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5 mb-2.5">
+          <span className="text-xs text-slate-500 font-medium">Context:</span>
+          <span className="text-xs px-2 py-0.5 bg-slate-100 rounded-md text-slate-700 font-mono">{model.contextWindow}</span>
+        </div>
+
+        <p className="text-xs text-slate-600 mb-3">
+          <span className="font-medium text-slate-700">Best for:</span> {model.bestFor}
+        </p>
+
+        <button
+          onClick={() => setOpen(!open)}
+          className="text-xs text-violet-500 hover:text-violet-700 flex items-center gap-1 cursor-pointer transition-colors"
+        >
+          {open ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+          {open ? 'Hide details' : 'Show strengths & cost'}
+        </button>
+
+        {open && (
+          <div className="mt-3 pt-3 border-t border-slate-100 space-y-2">
+            <ul className="space-y-1">
+              {model.strengths.map((s, i) => (
+                <li key={i} className="text-xs text-slate-600 flex items-start gap-1.5">
+                  <span className="text-violet-400 mt-0.5 flex-shrink-0">•</span>
+                  {s}
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs text-slate-500 pt-1 border-t border-slate-100">
+              <span className="font-medium">Cost:</span> {model.costTier}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export function ModelCardGrid({ models }: { models: ModelCard[] }) {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-6">
+      {models.map((m, i) => (
+        <ModelCardItem key={i} model={m} />
+      ))}
     </div>
   )
 }

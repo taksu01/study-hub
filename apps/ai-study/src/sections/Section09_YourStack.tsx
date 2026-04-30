@@ -55,12 +55,12 @@ export default function Section09() {
           rows={[
             { attribute: 'Complex reasoning / coding', values: ['Claude Sonnet 4.6', 'Best reasoning + 200k context + coding', 'Paid API'] },
             { attribute: 'Everyday chat / quick tasks', values: ['Claude Haiku 4.5 or GPT-4o mini', 'Fast and cheap, good enough for simple tasks', 'Very cheap'] },
-            { attribute: 'Deep reasoning / math', values: ['Claude Opus or o1', 'Extended thinking, highest accuracy', 'Expensive'] },
+            { attribute: 'Deep reasoning / math', values: ['Claude Opus 4.7 or o3', 'Extended thinking, highest accuracy on hard problems', 'Expensive'] },
             { attribute: 'Local general purpose', values: ['Llama 3.3 70B (via Ollama)', 'Near cloud quality, fully local', 'Free'] },
             { attribute: 'Local fast (limited RAM)', values: ['Llama 3.2 or Phi-4', 'Good quality, runs on 16GB RAM', 'Free'] },
             { attribute: 'Local coding', values: ['Qwen2.5-Coder 14B', 'Best local coding model', 'Free'] },
             { attribute: 'Local reasoning', values: ['DeepSeek-R1 32B', 'Shows chain-of-thought, excellent logic', 'Free'] },
-            { attribute: 'Long documents (>200k tokens)', values: ['Gemini 1.5 Pro', '1M token context window', 'Paid API'] },
+            { attribute: 'Long documents (>200k tokens)', values: ['Gemini 2.5 Pro', '1M token context window, multimodal', 'Paid API'] },
           ]}
         />
         <InfoCallout type="tip">
@@ -77,7 +77,7 @@ export default function Section09() {
             title: 'Model Tiering',
             subtitle: 'Match model to task complexity',
             content: 'Use Haiku for classification, extraction, simple Q&A. Use Sonnet for reasoning, writing, coding. Use Opus/o1 only for the hardest problems.',
-            details: 'Cost ratio roughly: Haiku (~$0.00025/1k tokens) → Sonnet (~$0.003/1k) → Opus (~$0.015/1k). A 10x cost difference. If you\'re doing 1M simple classifications per day, use Haiku. If you\'re doing 100 complex code reviews per day, use Sonnet. Getting this right is the biggest cost lever.',
+            details: 'Current Claude pricing (per million tokens, input/output):\n• Haiku 4.5: $0.25/$1.25 — very cheap, great for simple tasks\n• Sonnet 4.6: $3/$15 — mid-tier, best balance of quality and cost\n• Opus 4.7: $15/$75 — highest quality, for hard problems only\n\nA 10–60x cost difference across the tier. Getting model selection right is the single biggest cost lever. Always start with Haiku for prototyping, measure quality, upgrade only when needed.',
             tags: ['10x cost difference per tier'],
             color: 'green',
           },
@@ -217,7 +217,7 @@ export default function Section09() {
       <CheatSheetPanel title="Your Complete AI Reference" items={[
         { label: 'Daily coding', value: 'Claude Code (claude-sonnet-4-6) + filesystem + web search MCP' },
         { label: 'Everyday tasks', value: 'Claude Haiku 4.5 — fast, cheap, good enough for simple work' },
-        { label: 'Hard problems', value: 'Claude Opus or o1 — only when Sonnet isn\'t enough' },
+        { label: 'Hard problems', value: 'Claude Opus 4.7 or o3 — only when Sonnet isn\'t enough' },
         { label: 'Local general', value: 'ollama pull llama3.2 (16GB RAM) or llama3.3:70b (64GB)' },
         { label: 'Local coding', value: 'ollama pull qwen2.5-coder:14b' },
         { label: 'Local reasoning', value: 'ollama pull deepseek-r1:32b' },

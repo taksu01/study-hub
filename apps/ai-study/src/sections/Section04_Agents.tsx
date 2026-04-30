@@ -14,9 +14,12 @@ export default function Section04() {
       />
 
       <Subsection title="What Makes Something an Agent?">
+        <InfoCallout type="warning">
+          <strong>Precision matters here — the LLM is not the agent.</strong> The LLM is the <em>reasoning component inside</em> an agent. An agent is the full system: LLM (decides what to do) + tools (hands that act) + control loop (the code that drives iterations) + memory (state between steps). Confusing the engine with the car is the most common misconception in this space. When you build an agent, you're writing the car — the LLM is just the engine under the hood.
+        </InfoCallout>
         <Prose>
           <p>A chatbot answers questions. An agent takes actions. That single distinction changes everything about what AI can do.</p>
-          <p>An AI agent is an LLM plus a set of tools, running in a loop. The loop is the key: the model observes a situation, decides what to do, takes an action (using a tool), observes the result, and then decides what to do next — repeating until the task is complete or it needs to stop and ask the user.</p>
+          <p>An AI agent is a system where an LLM drives a control loop: observe a situation → decide what action to take → execute a tool → observe the result → decide what to do next — repeating until the task is complete or human input is needed. The LLM provides the reasoning; your code (or a framework) provides the loop, the tool execution, and the state management.</p>
           <p>Click each step in the agent loop below to understand what happens at that point.</p>
         </Prose>
         <div className="mt-4" />
@@ -138,9 +141,9 @@ export default function Section04() {
           },
           {
             title: 'Multi-Agent System',
-            subtitle: 'LLMs coordinating with each other',
-            content: 'An orchestrator LLM that delegates subtasks to specialized sub-agents.',
-            details: 'Example: Research agent (web search) + Writing agent (drafting) + Editor agent (review) all coordinated by a manager agent. Each agent specializes. This enables parallelism and specialization but adds complexity. Used in advanced pipelines like content creation, software development teams, and complex data analysis.',
+            subtitle: 'Specialized agents coordinating with each other',
+            content: 'An orchestrator agent that delegates subtasks to specialized sub-agents, each powered by its own LLM.',
+            details: 'Example: Research agent (web search) + Writing agent (drafting) + Editor agent (review) all coordinated by an orchestrator agent. Each agent has its own LLM call, its own set of tools, and a specific role.\n\nKey precision: the agents coordinate — not the LLMs directly. Each LLM is the brain of its respective agent. The orchestrator\'s LLM decides which sub-agent to call; the sub-agents\' LLMs execute their tasks.\n\nThis enables parallelism and specialization but adds significant complexity. Use multi-agent architectures only when a single-agent approach is clearly insufficient.',
             tags: ['Parallel work', 'Specialization'],
             color: 'orange',
           },
@@ -204,13 +207,14 @@ Walk me through your plan step by step:
 
       <Subsection title="Mini Recall">
         <MiniRecallBlock questions={[
-          { question: 'What is the core difference between a chatbot and an agent?', answer: 'A chatbot responds to messages (one turn). An agent loops: observe → think → act with tools → observe result → think again, until the task is complete. Agents can take sequences of actions autonomously.' },
+          { question: 'What is the core difference between a chatbot and an agent?', answer: 'A chatbot responds to messages in a single turn (no tools, no loop). An agent drives a control loop: observe → LLM decides action → execute tool → observe result → repeat, until the task is complete. Agents can take sequences of autonomous actions. The LLM is the reasoning core inside the agent — it doesn\'t execute actions itself; the framework does.' },
           { question: 'You want to build an agent that monitors a website for price drops. What type is this?', answer: 'A reactive agent (or autonomous agent if scheduled). It\'s triggered by an external condition (price change) and takes action (send notification, execute trade). Needs a tool for web fetching and a tool for notifications.' },
           { question: 'Why do agents need guardrails?', answer: 'Because agents can take many autonomous actions in a loop. Without constraints on what tools they can use and what domains they operate in, they can cause unintended consequences. Limit scope, require human approval for high-stakes actions.' },
         ]} />
       </Subsection>
 
       <CheatSheetPanel title="Section 4 Summary" items={[
+        { label: 'Agent = system', value: 'LLM (reasoning) + tools (hands) + loop (control flow) + memory (state)' },
         { label: 'Agent loop', value: 'Observe → Think (LLM) → Act (tool) → Get result → Loop or finish' },
         { label: 'Tool', value: 'Any function the agent can call: search, file, API, browser, code exec' },
         { label: 'ReAct pattern', value: 'Reason then act, alternating — standard for planning agents' },

@@ -12,12 +12,30 @@
   --color-btc-600: #d97706;
 }
 
+/* Dark mode: class-based */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   html {
     scroll-behavior: smooth;
   }
   body {
-    @apply bg-gray-50 text-gray-800 antialiased;
+    @apply bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Smooth dark mode transitions */
+  *,
+  *::before,
+  *::after {
+    transition-property: background-color, border-color, color;
+    transition-duration: 150ms;
+    transition-timing-function: ease;
+  }
+
+  /* Disable transitions on scroll-driven elements */
+  .no-transition,
+  .no-transition * {
+    transition: none !important;
   }
 }

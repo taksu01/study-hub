@@ -83,9 +83,9 @@ export default function LightningVisual() {
   const bobPct = parseFloat(cs.bobBal) / 0.1 * 100
 
   return (
-    <div className="my-6 rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-      <div className="px-5 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between flex-wrap gap-2">
-        <p className="text-xs font-bold tracking-widest text-gray-400 uppercase flex items-center gap-2">
+    <div className="my-6 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+      <div className="px-5 py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-wrap gap-2">
+        <p className="text-xs font-bold tracking-widest text-gray-400 dark:text-gray-500 uppercase flex items-center gap-2">
           <span className="text-amber-500">◆</span> Lightning Network Explorer
         </p>
         <div className="flex gap-1">
@@ -94,7 +94,7 @@ export default function LightningVisual() {
               key={t.key}
               onClick={() => setTab(t.key)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer
-                ${tab === t.key ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-100'}`}
+                ${tab === t.key ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
             >
               {t.label}
             </button>
@@ -113,7 +113,7 @@ export default function LightningVisual() {
                   key={i}
                   onClick={() => setChannelStep(i)}
                   className={`w-8 h-1.5 rounded-full transition-all cursor-pointer
-                    ${i === channelStep ? 'bg-amber-500' : i < channelStep ? 'bg-amber-200' : 'bg-gray-200'}`}
+                    ${i === channelStep ? 'bg-amber-500' : i < channelStep ? 'bg-amber-200 dark:bg-amber-800' : 'bg-gray-200 dark:bg-gray-700'}`}
                 />
               ))}
             </div>
@@ -123,12 +123,12 @@ export default function LightningVisual() {
               <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold text-white ${cs.tagColor}`}>
                 {cs.tag}
               </span>
-              <p className="text-sm font-bold text-gray-800 mt-2">{cs.label}</p>
-              <p className="text-xs text-gray-500 mt-1">{cs.desc}</p>
+              <p className="text-sm font-bold text-gray-800 dark:text-gray-200 mt-2">{cs.label}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{cs.desc}</p>
             </div>
 
             {/* Channel balance bar */}
-            <div className="rounded-xl border-2 border-gray-200 overflow-hidden mb-4">
+            <div className="rounded-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden mb-4">
               <div className="flex h-12">
                 <div
                   className="bg-blue-400 flex items-center justify-center transition-all duration-500"
@@ -143,10 +143,10 @@ export default function LightningVisual() {
                   {bobPct > 15 && <span className="text-xs font-bold text-white">{cs.bobBal}</span>}
                 </div>
               </div>
-              <div className="flex justify-between px-3 py-1.5 bg-gray-50 text-xs">
-                <span className="text-blue-600 font-medium">Alice: {cs.aliceBal} BTC</span>
-                <span className="text-gray-400">Channel: 0.10 BTC</span>
-                <span className="text-emerald-600 font-medium">Bob: {cs.bobBal} BTC</span>
+              <div className="flex justify-between px-3 py-1.5 bg-gray-50 dark:bg-gray-800 text-xs">
+                <span className="text-blue-600 dark:text-blue-400 font-medium">Alice: {cs.aliceBal} BTC</span>
+                <span className="text-gray-400 dark:text-gray-500">Channel: 0.10 BTC</span>
+                <span className="text-emerald-600 dark:text-emerald-400 font-medium">Bob: {cs.bobBal} BTC</span>
               </div>
             </div>
 
@@ -155,7 +155,7 @@ export default function LightningVisual() {
               <button
                 onClick={() => setChannelStep(Math.max(0, channelStep - 1))}
                 disabled={channelStep === 0}
-                className="px-4 py-2 rounded-lg text-xs font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-lg text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
               >
                 ← Prev
               </button>
@@ -173,7 +173,7 @@ export default function LightningVisual() {
         {/* HTLC Routing */}
         {tab === 'routing' && (
           <div className="max-w-md mx-auto">
-            <p className="text-xs text-gray-500 mb-4 text-center">Step through multi-hop payment: Alice → Bob → Carol → Dave</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4 text-center">Step through multi-hop payment: Alice → Bob → Carol → Dave</p>
 
             {/* Network nodes */}
             <div className="flex items-center justify-between mb-6 px-4">
@@ -186,10 +186,10 @@ export default function LightningVisual() {
                       <div className="absolute" style={{ display: 'none' }} />
                     )}
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all duration-300
-                      ${active ? 'bg-amber-100 border-amber-400 text-amber-700 shadow-md scale-110' : 'bg-gray-100 border-gray-300 text-gray-400'}`}>
+                      ${active ? 'bg-amber-100 dark:bg-amber-900/40 border-amber-400 text-amber-700 dark:text-amber-300 shadow-md scale-110' : 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-500'}`}>
                       {name[0]}
                     </div>
-                    <span className="text-xs text-gray-600 font-medium">{name}</span>
+                    <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">{name}</span>
                   </div>
                 )
               })}
@@ -197,28 +197,28 @@ export default function LightningVisual() {
 
             {/* Connections */}
             <div className="flex items-center justify-center gap-0 mb-4 px-8">
-              <div className="flex-1 h-1 bg-gray-200 rounded-full relative overflow-hidden">
+              <div className="flex-1 h-1 bg-gray-200 dark:bg-gray-700 rounded-full relative overflow-hidden">
                 <div className={`h-full bg-amber-400 transition-all duration-500 rounded-full ${routeStep >= 1 ? 'w-full' : 'w-0'}`} />
               </div>
-              <div className="flex-1 h-1 bg-gray-200 rounded-full relative overflow-hidden">
+              <div className="flex-1 h-1 bg-gray-200 dark:bg-gray-700 rounded-full relative overflow-hidden">
                 <div className={`h-full bg-amber-400 transition-all duration-500 rounded-full ${routeStep >= 2 ? 'w-full' : 'w-0'}`} />
               </div>
-              <div className="flex-1 h-1 bg-gray-200 rounded-full relative overflow-hidden">
+              <div className="flex-1 h-1 bg-gray-200 dark:bg-gray-700 rounded-full relative overflow-hidden">
                 <div className={`h-full bg-amber-400 transition-all duration-500 rounded-full ${routeStep >= 3 ? 'w-full' : 'w-0'}`} />
               </div>
             </div>
 
             {/* Current step */}
-            <div className={`rounded-xl p-4 text-center mb-4 transition-all ${routeStep === routingSteps.length - 1 ? 'bg-emerald-50 border-2 border-emerald-200' : 'bg-gray-50 border-2 border-gray-200'}`}>
-              <p className="text-xs text-gray-400 mb-1">Step {routeStep + 1}/{routingSteps.length}</p>
-              <p className="text-sm text-gray-800 font-medium">{routingSteps[routeStep].label}</p>
+            <div className={`rounded-xl p-4 text-center mb-4 transition-all ${routeStep === routingSteps.length - 1 ? 'bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-200 dark:border-emerald-800' : 'bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700'}`}>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">Step {routeStep + 1}/{routingSteps.length}</p>
+              <p className="text-sm text-gray-800 dark:text-gray-200 font-medium">{routingSteps[routeStep].label}</p>
             </div>
 
             <div className="flex justify-center gap-3">
               <button
                 onClick={() => setRouteStep(Math.max(0, routeStep - 1))}
                 disabled={routeStep === 0}
-                className="px-4 py-2 rounded-lg text-xs font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-lg text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
               >
                 ← Prev
               </button>
@@ -236,27 +236,27 @@ export default function LightningVisual() {
         {/* L1 vs Lightning comparison */}
         {tab === 'compare' && (
           <div className="max-w-lg mx-auto">
-            <div className="overflow-hidden rounded-xl border border-gray-200 shadow-sm">
+            <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="text-left px-4 py-2.5 font-semibold text-gray-500 text-xs">Aspect</th>
-                    <th className="text-left px-4 py-2.5 font-semibold text-blue-600 text-xs">Base Layer (L1)</th>
-                    <th className="text-left px-4 py-2.5 font-semibold text-amber-600 text-xs">Lightning (L2)</th>
+                  <tr className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                    <th className="text-left px-4 py-2.5 font-semibold text-gray-500 dark:text-gray-400 text-xs">Aspect</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-blue-600 dark:text-blue-400 text-xs">Base Layer (L1)</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-amber-600 dark:text-amber-400 text-xs">Lightning (L2)</th>
                   </tr>
                 </thead>
                 <tbody>
                   {compareData.map((row, i) => (
                     <tr
                       key={row.aspect}
-                      className={`border-b border-gray-100 transition-colors cursor-pointer
-                        ${hoveredCompare === i ? 'bg-amber-50' : i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}
+                      className={`border-b border-gray-100 dark:border-gray-800 transition-colors cursor-pointer
+                        ${hoveredCompare === i ? 'bg-amber-50 dark:bg-amber-900/20' : i % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-gray-50/50 dark:bg-gray-900/50'}`}
                       onMouseEnter={() => setHoveredCompare(i)}
                       onMouseLeave={() => setHoveredCompare(null)}
                     >
-                      <td className="px-4 py-2.5 font-medium text-gray-700 text-xs">{row.aspect}</td>
-                      <td className="px-4 py-2.5 text-gray-600 text-xs">{row.base}</td>
-                      <td className="px-4 py-2.5 text-gray-600 text-xs">{row.lightning}</td>
+                      <td className="px-4 py-2.5 font-medium text-gray-700 dark:text-gray-300 text-xs">{row.aspect}</td>
+                      <td className="px-4 py-2.5 text-gray-600 dark:text-gray-400 text-xs">{row.base}</td>
+                      <td className="px-4 py-2.5 text-gray-600 dark:text-gray-400 text-xs">{row.lightning}</td>
                     </tr>
                   ))}
                 </tbody>

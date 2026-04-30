@@ -36,3 +36,29 @@ export interface Section {
     rows: ComparisonRow[]
   }
 }
+
+export interface MarketSection {
+  id: string
+  number: number
+  title: string
+  subtitle: string
+  icon: string
+  tagline: string
+  audience: 'skeptic' | 'investor' | 'developer' | 'all'
+  bigPicture: string
+  whyItMatters: string
+  simpleExample?: string
+  details: string[]
+  keyTerms: KeyTerm[]
+  commonConfusion: string[]
+  recallPrompts: RecallPrompt[]
+  cheatSheet: string[]
+  visualComponent?: string
+  investorTakeaway?: string
+  comparisonTable?: {
+    title: string
+    colAHeader: string
+    colBHeader: string
+    rows: ComparisonRow[]
+  }
+}

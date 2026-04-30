@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig(({ command }) => ({
-  base: command === 'build' ? '/study-hub/ai-study/' : '/',
+  base: command === 'build' ? '/study-hub/ai-study/' : '/ai-study/',
   plugins: [react(), tailwindcss()],
-  server: { host: true },
+  server: { host: true, port: 5174, strictPort: true },
 }))

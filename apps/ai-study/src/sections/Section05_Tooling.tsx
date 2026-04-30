@@ -15,11 +15,11 @@ export default function Section05() {
 
       <Subsection title="MCP — The USB Port for AI">
         <Prose>
-          <p>Before MCP (Model Context Protocol), every AI tool had its own proprietary way of accessing external resources. Claude had one system. OpenAI had another. LangChain had its own. Building integrations meant writing custom code for each combination.</p>
-          <p>MCP is Anthropic's open standard that solves this. It's like USB: a universal connector. Any AI client that speaks MCP can use any MCP server, regardless of who built it. An MCP server is a small program that exposes tools (functions the AI can call) and resources (data the AI can read) over a standard protocol.</p>
+          <p>Before MCP (Model Context Protocol), every AI tool had its own proprietary way of accessing external resources. Claude had one system. OpenAI had another. LangChain had its own. Building integrations meant writing custom code for each combination — the fragmentation tax.</p>
+          <p>MCP is an open standard — proposed by Anthropic in November 2024 and since adopted industry-wide by OpenAI, Google DeepMind, Microsoft Copilot, and thousands of community contributors. It works like USB: a universal connector. Any AI client that speaks MCP can use any MCP server, regardless of who built either side. An MCP server is a small program that exposes tools (functions the AI can call) and resources (data the AI can read) over a standard protocol.</p>
         </Prose>
         <InfoCallout type="info">
-          <strong>Why MCP matters to you:</strong> As a developer, MCP means you can give Claude access to your filesystem, GitHub, databases, calendars, Slack, or any custom tool — without writing any AI-specific code. You just point Claude Code at an MCP server and it starts using that tool automatically.
+          <strong>Why MCP matters to you:</strong> As a developer, MCP means you can give Claude (or any MCP-compatible AI) access to your filesystem, GitHub, databases, calendars, Slack, or any custom tool — without writing any AI-specific code. You just point the AI client at an MCP server and it uses that tool automatically. The same MCP server works with Claude, GPT-4o, and any future MCP client.
         </InfoCallout>
         <div className="mt-6" />
         <ExpandableCardGrid columns={3} cards={[
@@ -158,11 +158,11 @@ Get your free Brave Search API key at: api.search.brave.com`}
             color: 'blue',
           },
           {
-            title: 'Claude Agent SDK',
-            subtitle: 'Anthropic\'s native agent framework',
-            content: 'Anthropic\'s official SDK for building agents with Claude — tool use, streaming, multi-turn.',
-            details: 'The Anthropic Python SDK handles: tool definitions, tool result handling, streaming responses, multi-turn conversations. It\'s the lowest-level, most direct way to build agents with Claude. You define Python functions, decorate them as tools, and the SDK handles the agent loop. Best when you want full control and are primarily using Claude.',
-            tags: ['Official SDK', 'Full control'],
+            title: 'Anthropic SDK',
+            subtitle: 'Direct API access — Python and TypeScript',
+            content: 'The official Anthropic SDK for calling Claude\'s API — tool use, streaming, multi-turn conversations, prompt caching.',
+            details: 'The Anthropic SDK (pip install anthropic / npm install @anthropic-ai/sdk) is the lowest-level, most direct way to use Claude. It handles: structured tool definitions (JSON schema), tool result handling, streaming responses, multi-turn conversation state, prompt caching, and vision inputs.\n\nThis is the base SDK — you manage the agent loop yourself if you need one.\n\nSeparate from this: Anthropic also offers a higher-level Agent SDK (anthropic-agent) specifically for multi-agent orchestration. If you\'re building a simple app or a single-agent tool, use the base SDK. If you need orchestrator + sub-agent coordination, look at the Agent SDK.',
+            tags: ['pip install anthropic', 'Official, lowest-level'],
             color: 'purple',
           },
         ]} />
@@ -170,7 +170,7 @@ Get your free Brave Search API key at: api.search.brave.com`}
 
       <Subsection title="Key Terms">
         <TermsMemoryBlock terms={[
-          { term: 'MCP', definition: 'Model Context Protocol — Anthropic\'s open standard for connecting AI models to external tools and resources. Like USB for AI.' },
+          { term: 'MCP', definition: 'Model Context Protocol — an open standard for connecting AI models to external tools and resources. Proposed by Anthropic in 2024, now adopted industry-wide by OpenAI, Google, Microsoft, and thousands of community servers. Like USB for AI.' },
           { term: 'MCP Server', definition: 'A small program that exposes tools (functions) and resources (data) over the MCP protocol. The AI client connects to it automatically.' },
           { term: 'MCP Client', definition: 'The AI application that connects to MCP servers. Claude Code and Claude Desktop are MCP clients.' },
           { term: 'Function calling', definition: 'The technical mechanism by which an LLM requests a tool execution. The model outputs a structured JSON object specifying tool name and parameters.' },
@@ -208,7 +208,7 @@ Get your free Brave Search API key at: api.search.brave.com`}
       </Subsection>
 
       <CheatSheetPanel title="Section 5 Summary" items={[
-        { label: 'MCP', value: 'Universal standard for AI ↔ tools. Like USB. Anthropic\'s open protocol.' },
+        { label: 'MCP', value: 'Open standard for AI ↔ tools. Like USB. Proposed by Anthropic, now industry-wide.' },
         { label: 'MCP server', value: 'Small local program that exposes tools/resources to any MCP client.' },
         { label: 'Claude Skills', value: 'Slash commands (/review, custom) = reusable prompt templates.' },
         { label: 'Anthropic API', value: 'Best for complex reasoning, coding, long documents.' },

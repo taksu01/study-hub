@@ -3,5 +3,12 @@
   "private": true,
   "workspaces": [
     "apps/*"
-  ]
+  ],
+  "scripts": {
+    "dev": "node dev.mjs"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0",
+    "vite": "^8.0.4"
+  }
 }

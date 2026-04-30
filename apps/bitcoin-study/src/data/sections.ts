@@ -1225,4 +1225,364 @@ These aren't inherently better or worse — they're different design trade-offs 
       'Don\'t map Ethereum mental models directly onto Bitcoin',
     ],
   },
+
+  // ─── SECTION 11 — SEGREGATED WITNESS (SEGWIT) ─────────────────
+  {
+    id: 'segwit',
+    number: 11,
+    title: 'Segregated Witness (SegWit)',
+    subtitle: 'Transaction malleability fix, the witness discount, and how SegWit unlocked Lightning',
+    icon: '✂',
+    bigPicture: `Segregated Witness (SegWit) is a protocol upgrade activated in August 2017 via a soft fork (BIP 141). The name describes exactly what it does: it **segregates** (separates) the **witness** data (signatures) from the transaction data that computes the transaction ID (TXID).
+
+Before SegWit, a transaction's ID was computed from the entire serialized transaction, including signatures. This created a critical vulnerability: **transaction malleability** — a third party could modify the signature bytes in a valid way (without invalidating the signature itself) and produce a different TXID for the same economic transaction. This broke Lightning Network channels and caused real operational problems for exchanges.
+
+SegWit solves this by moving signature data into a separate "witness" structure that is NOT included in the TXID calculation. The TXID is now computed only from the non-witness data, making it immutable once broadcast. As a side effect, SegWit also introduced a **witness discount**: witness data is counted at 1/4 the weight of non-witness data, effectively increasing block capacity from ~1 MB to ~2-4 MB for typical workloads.`,
+
+    whyItMatters: `SegWit was the foundational upgrade that made the Lightning Network possible. Without a fixed TXID (the transaction malleability fix), Lightning's channel funding transactions couldn't be safely pre-signed. SegWit also introduced the "virtual byte" (vByte) weight system that all modern fee calculations use, and defined the bech32 address format (bc1q...) still dominant today.`,
+
+    visual: `TRANSACTION MALLEABILITY - THE PROBLEM
+========================================
+
+  Before SegWit:
+  TXID = SHA256d( version + inputs + outputs + locktime + signatures )
+
+  Problem: signatures could be "malleated" (altered while still valid)
+           -> different TXID for the same economic transaction
+           -> broke pre-signed tx chains (Lightning, time-locked contracts)
+
+
+SEGWIT SOLUTION - SEPARATE THE WITNESS
+========================================
+
+  After SegWit:
+  TXID = SHA256d( version + inputs + outputs + locktime )
+         (NO signatures in TXID computation)
+
+  WTXID = SHA256d( version + marker + flag + inputs + outputs +
+                   witness_data + locktime )
+
+  TXID is now immutable once broadcast.
+  Witness data travels alongside but does not affect the ID.
+
+
+BLOCK WEIGHT SYSTEM
+====================
+
+  Old model: 1 block = max 1,000,000 bytes (1 MB)
+
+  New model: 1 block = max 4,000,000 weight units (WU)
+             Non-witness byte = 4 WU
+             Witness byte     = 1 WU  <- 75% discount
+
+  Virtual byte (vByte) = weight_units / 4
+  Block limit in vBytes = 1,000,000 vB (but up to ~4 MB actual data)
+
+  Real-world capacity:
+  +------------------------+--------------------+
+  |  Transaction type      | Typical block size |
+  +------------------------+--------------------+
+  |  All legacy (P2PKH)    | ~1 MB              |
+  |  Mixed                 | ~1.5-2 MB          |
+  |  All native SegWit     | ~2-2.5 MB          |
+  +------------------------+--------------------+
+
+
+ADDRESS TYPE EVOLUTION
+=======================
+
+  P2PKH    (1...)      Legacy          ~148 vB input
+  P2SH-P2WPKH (3...)  Wrapped SegWit  ~91 vB input
+  P2WPKH   (bc1q...)  Native SegWit   ~68 vB input
+  P2TR     (bc1p...)  Taproot         ~57.5 vB input`,
+
+    simpleExample: `Think of a check. Before SegWit, the check number was calculated from the ink of the signature — a forger could rewrite the signature with equivalent ink and produce a "different check" that was still valid but had a new ID. After SegWit, the check number is calculated from the amount and parties only. The signature is stapled to the side. You cannot change the check number anymore.`,
+
+    details: [
+      `**Soft fork deployment**: SegWit activated via BIP 9 miner signaling (BIP 141). Old nodes still accepted SegWit blocks — they saw the witness-program outputs as "anyone can spend" but did not enforce witness rules. New nodes enforced the full SegWit ruleset. Backward compatibility preserved.`,
+      `**Witness discount rationale**: Witness data can be pruned by nodes after validation. It does not need to be stored forever like UTXO set data. The discount reflects this lower long-term cost to the network.`,
+      `**vBytes vs bytes**: Modern wallets and fee estimators use virtual bytes (vB), not raw bytes. Fee rate = sat/vB. A native SegWit input is ~68 vB vs ~148 vB for legacy P2PKH — more than 50% cheaper per spend.`,
+      `**Wrapped SegWit (P2SH-P2WPKH)**: A transition format that wraps native SegWit scripts inside P2SH for compatibility with wallets that did not yet support bech32 addresses. Still common but more expensive than native SegWit.`,
+      `**WTXID vs TXID**: WTXID includes all witness data and is used in the witness commitment inside the coinbase transaction. TXID remains the stable identifier used in inputs and outputs.`,
+      `**Script versioning**: SegWit introduced versioned witness scripts. Version 0 = P2WPKH and P2WSH. Version 1 = Taproot (activated November 2021). This versioning enables future script upgrades as soft forks without changing the base transaction format.`,
+    ],
+
+    keyTerms: [
+      { term: 'Transaction malleability', definition: 'The ability to alter signature bytes in a valid transaction, changing its TXID without invalidating it. SegWit fixed this.' },
+      { term: 'Witness data', definition: 'Signature and script data separated from the main transaction body under SegWit. Not included in TXID computation.' },
+      { term: 'Weight unit (WU)', definition: 'Post-SegWit transaction size unit. Non-witness bytes = 4 WU; witness bytes = 1 WU. Block limit = 4,000,000 WU.' },
+      { term: 'Virtual byte (vByte)', definition: 'WU divided by 4. Used for fee rate calculations (sat/vB). Block limit = 1,000,000 vB.' },
+      { term: 'P2WPKH', definition: 'Pay-to-Witness-Public-Key-Hash. Native SegWit address type using bech32 encoding (bc1q...).' },
+      { term: 'bech32', definition: 'The address encoding format for native SegWit (bc1q...) addresses. Uses only lowercase alphanumerics for clarity and error detection.' },
+      { term: 'Witness discount', definition: 'Witness bytes cost 1 WU instead of 4 WU, making SegWit transactions significantly cheaper than legacy transactions.' },
+    ],
+
+    commonConfusion: [
+      `**"SegWit increased the block size to 4 MB"** — Not exactly. SegWit changed the limit to 4 million weight units. Blocks with typical transaction mixes reach ~1.5-2.5 MB in practice. A theoretical all-native-SegWit block could approach ~4 MB of raw data.`,
+      `**"SegWit was just about lower fees"** — The fee reduction was a side effect. The primary purpose was fixing transaction malleability to enable Lightning Network and other second-layer protocols that rely on pre-signed transactions.`,
+      `**"P2SH addresses (3...) are always SegWit"** — Only if they are wrapped SegWit (P2SH-P2WPKH). Many P2SH outputs are plain multisig with no SegWit benefit. You cannot tell from the address prefix alone.`,
+      `**"Miners opposed SegWit because it reduced fees"** — Some miners preferred a direct block size increase. The conflict was also about decentralization philosophy and the precedent for how Bitcoin scales. See Section 13.`,
+    ],
+
+    recallPrompts: [
+      { question: 'What is transaction malleability and why did it block the Lightning Network?', hint: 'If TXID could change after signing, pre-signed channel funding transactions would reference a ___ TXID.' },
+      { question: 'How does the witness discount work in weight units?', hint: 'Witness bytes = ___ WU. Non-witness bytes = ___ WU. So signatures cost ___ as much.' },
+      { question: 'What address format did native SegWit introduce?', hint: 'bech32 encoding: bc1___ prefix.' },
+    ],
+
+    cheatSheet: [
+      'SegWit = soft fork, August 2017 (BIP 141)',
+      'Separates signature (witness) from TXID computation -> fixes malleability',
+      'Block limit: 4,000,000 weight units (not 4 MB)',
+      'Witness bytes = 1 WU; non-witness bytes = 4 WU -> 75% discount on signatures',
+      'vByte = WU / 4 (the standard unit for modern fee rates)',
+      'Native SegWit: P2WPKH -> bc1q... addresses (bech32)',
+      'Taproot: SegWit v1 -> bc1p... addresses (bech32m)',
+      'SegWit was the prerequisite that made Lightning Network possible',
+    ],
+  },
+
+  // ─── SECTION 12 — TAPROOT & SCHNORR ──────────────────────────
+  {
+    id: 'taproot',
+    number: 12,
+    title: 'Taproot & Schnorr Signatures',
+    subtitle: 'Key aggregation, MAST, script privacy, and Bitcoin\'s biggest upgrade since SegWit',
+    icon: '🌿',
+    bigPicture: `Taproot is a soft fork upgrade activated in November 2021 (BIP 340/341/342). It bundles three interrelated improvements: **Schnorr signatures**, **Taproot script commitments (MAST)**, and **Tapscript**. Together, they make complex Bitcoin scripts look indistinguishable from simple payments on-chain — dramatically improving privacy and efficiency.
+
+The core insight: with Taproot, a multisig spend, a Lightning channel close, or a complex time-locked contract can all appear identical to a single-key payment on the blockchain. If all parties agree (the "happy path"), the transaction is completely indistinguishable from a regular send — no scripts, no complex locking conditions visible to observers.
+
+**Schnorr signatures** replace ECDSA for Taproot outputs. Schnorr has a crucial algebraic property: multiple public keys can be **aggregated** into a single combined public key, and multiple signatures can be aggregated into a single signature. A 3-of-3 multisig with MuSig2 is indistinguishable from a single-key signature on-chain.`,
+
+    whyItMatters: `Taproot is the foundation of Bitcoin's next decade of development. It enables more efficient multisig, more private Lightning channel closes, more compact smart contracts, and the foundation for Discreet Log Contracts (DLCs). The "looks like a regular tx" property is powerful for privacy — it erodes the heuristics blockchain surveillance firms rely on to deanonymize users.`,
+
+    visual: `ECDSA vs SCHNORR SIGNATURES
+============================
+
+  ECDSA (pre-Taproot):
+  - Non-linear math, complex batch verification
+  - Signature size: ~71-72 bytes each
+  - n-of-n multisig -> n separate keys + n separate sigs on-chain
+  - Script structure visible to anyone
+
+  Schnorr (BIP 340):
+  - Linear math: enables key and signature aggregation
+  - Signature size: exactly 64 bytes each (smaller + faster)
+  - n-of-n multisig + MuSig2 -> 1 combined key + 1 sig on-chain
+  - Indistinguishable from a regular single-key spend
+
+
+TAPROOT COMMITMENT STRUCTURE (BIP 341)
+=======================================
+
+               TAPROOT OUTPUT KEY (Q)
+              Q = P + hash(P || root) * G
+
+              P = internal key (happy path)
+              root = Merkle root of all script alternatives
+
+                         |
+          +--------------+--------------+
+          |                             |
+   KEY PATH SPEND              SCRIPT PATH SPEND
+   (cooperative)               (fallback)
+
+   All parties agree?          Use a specific script leaf
+   -> sign with combined key   -> reveal leaf + Merkle proof
+   -> looks like a regular tx  -> only USED script is visible
+   -> NO scripts visible        -> other scripts stay private
+
+
+MAST - MERKELIZED ALTERNATIVE SCRIPT TREES
+============================================
+
+  "Alice can spend after 1 year, OR 2-of-3 multisig anytime"
+
+                  [Merkle Root]
+                       |
+           +-----------+-----------+
+           |                       |
+  [Leaf A: Alice 1yr]   [Leaf B: 2-of-3 multisig]
+
+  If 2-of-3 multisig is used -> Leaf B + proof revealed
+  Leaf A (the timelock) stays private forever
+
+
+LIGHTNING CHANNEL CLOSE - PRIVACY IMPROVEMENT
+===============================================
+
+  Pre-Taproot:  2-of-2 multisig spend visible on-chain
+                -> identifiable as Lightning channel
+
+  Post-Taproot: Cooperative close = key path spend
+                -> looks like a regular 1-of-1 tx
+                -> completely unidentifiable as Lightning`,
+
+    simpleExample: `Think of Taproot as a magic legal document. The cover page says "this asset belongs to Alice and Bob" — clean, simple, private. Hidden inside are 37 pages of fallback conditions. If everyone cooperates and signs normally, observers only ever see the cover page. The 37 backup clauses are committed to cryptographically but never revealed unless a fallback is actually needed.`,
+
+    details: [
+      `**BIP 340/341/342**: These three BIPs activated together in November 2021. BIP 340 defines Schnorr signatures; BIP 341 defines the Taproot commitment structure; BIP 342 defines Tapscript (the updated scripting language for script-path spends).`,
+      `**MuSig2**: A two-round interactive protocol for n-of-n Schnorr key and signature aggregation. Participants must exchange nonce commitments before signing to prevent rogue-key attacks. The result is a single combined key and a single combined signature on-chain.`,
+      `**Discreet Log Contracts (DLCs)**: A smart contract primitive enabled by Schnorr signatures. An oracle signs a real-world outcome (e.g., BTC price on a specific date). This signature directly unlocks a contract payout — without the oracle knowing anything about the specific contract it is enabling.`,
+      `**Tapscript (BIP 342)**: The updated scripting language for Taproot script-path spends. Introduces OP_SUCCESS opcodes — any future opcode defined as OP_SUCCESS causes immediate script success on old nodes, enabling new functionality via soft forks while remaining backward compatible.`,
+      `**Speedy Trial activation**: Taproot used a modified activation mechanism with a fixed 3-month signaling window requiring 90% miner support. It achieved this quickly with near-universal technical consensus — a contrast to the contentious SegWit activation. See Section 13.`,
+      `**bc1p addresses**: Taproot outputs use bech32m encoding (a slightly improved checksum over bech32), producing addresses starting with bc1p. The different checksum prevents accidentally sending native SegWit funds to a Taproot address or vice versa.`,
+    ],
+
+    keyTerms: [
+      { term: 'Schnorr signature', definition: 'A signature scheme with linear algebraic properties enabling key/signature aggregation and efficient batch verification. Replaces ECDSA for Taproot outputs.' },
+      { term: 'Key aggregation', definition: 'Combining multiple public keys and signatures into a single key/signature. Makes n-of-n multisig indistinguishable from a single-key spend.' },
+      { term: 'MuSig2', definition: 'A two-round interactive protocol for n-of-n Schnorr key/signature aggregation, secure against rogue-key attacks.' },
+      { term: 'Taproot output (Q)', definition: 'The on-chain output key committing to both an internal signing key (happy path) and a Merkle root of all fallback scripts.' },
+      { term: 'MAST', definition: 'Merkelized Alternative Script Trees. Only the executed script branch is revealed on-chain; all unexecuted alternatives remain private.' },
+      { term: 'Key path spend', definition: 'Spending a Taproot output via the internal key (cooperative). Looks identical to a regular single-key spend.' },
+      { term: 'Script path spend', definition: 'Spending via a committed script leaf. Requires revealing that specific leaf and its Merkle proof.' },
+      { term: 'Tapscript', definition: 'The updated scripting language for Taproot script-path spends, with OP_SUCCESS opcodes for forward-compatible upgrades.' },
+    ],
+
+    commonConfusion: [
+      `**"Taproot makes Bitcoin like Ethereum"** — Taproot enables more expressive scripts and primitives like DLCs, but Bitcoin remains intentionally non-Turing-complete. No loops, no arbitrary state machines. The security trade-off is explicit.`,
+      `**"Taproot makes Bitcoin fully private"** — Taproot significantly improves privacy when all parties cooperate (key path spends). Forced script-path spends still reveal the used branch. It is a meaningful improvement, not complete privacy.`,
+      `**"Schnorr key aggregation means anyone can steal coins"** — The linearity that enables aggregation is carefully constrained by protocols like MuSig2. A naive "just add the keys" approach is vulnerable to rogue-key attacks. MuSig2 prevents this with a commitment round.`,
+      `**"Taproot was as controversial as SegWit"** — Much less so. There was near-universal technical agreement. The Bitcoin community had matured significantly from the block size wars. Activation via Speedy Trial was smooth and completed without a chain split.`,
+    ],
+
+    recallPrompts: [
+      { question: 'What is the key path vs script path in a Taproot spend?', hint: 'Key path = all parties cooperate, looks like a ___ spend. Script path = uses a fallback, reveals only the ___ leaf.' },
+      { question: 'What algebraic property of Schnorr enables key aggregation?', hint: 'Schnorr is ___ (ECDSA is non-linear). This allows combining keys and signatures into ___.' },
+      { question: 'What is MAST and why does it improve privacy?', hint: 'Only the ___ script branch is revealed. Unexecuted alternatives stay ___.' },
+    ],
+
+    cheatSheet: [
+      'Taproot = BIP 340/341/342, activated November 2021',
+      'Schnorr: 64 bytes, linear algebra, batch-verifiable, aggregatable',
+      'MuSig2: n-of-n multisig -> 1 combined key + 1 combined signature on-chain',
+      'Taproot output commits to an internal key AND a Merkle tree of scripts',
+      'Key path spend (happy path) = indistinguishable from a regular single-key tx',
+      'MAST: only the executed script branch is revealed; others remain private',
+      'bc1p... = bech32m encoding for Taproot (SegWit v1) outputs',
+      'Enables DLCs, more private Lightning closes, forward-compatible script upgrades',
+    ],
+  },
+
+  // ─── SECTION 13 — BLOCK SIZE WARS & BITCOIN GOVERNANCE ────────
+  {
+    id: 'governance',
+    number: 13,
+    title: 'The Block Size Wars & Bitcoin Governance',
+    subtitle: 'How Bitcoin makes decisions, why the 2015-2017 scaling debate mattered, and what UASF revealed',
+    icon: '⚔',
+    bigPicture: `From 2015 to 2017, Bitcoin faced its most existential political crisis: the **block size debate**. On one side, a coalition of miners and businesses argued for a simple hard fork to increase the base block size from 1 MB to 8 MB. On the other, a coalition of developers and users argued for SegWit as a soft fork, keeping the base layer constrained and scaling via second-layer solutions like Lightning.
+
+This was not just a technical debate. It was a power struggle over **who controls Bitcoin's protocol rules**: miners, businesses, developers, or users. The answer Bitcoin gave is now called the **UASF** (User-Activated Soft Fork) — and it settled the question of Bitcoin's governance model definitively.
+
+The resolution: SegWit activated in August 2017 via UASF (BIP 148). A competing chain forked off as **Bitcoin Cash** (BCH) with 8 MB blocks. Bitcoin Cash later split further. Bitcoin retained 99%+ of the market value. The market delivered its verdict clearly.`,
+
+    whyItMatters: `The block size wars answered the most important governance question: "who runs Bitcoin?" The answer: not any single party. Not Core developers (they write code; they do not deploy it). Not miners (they build blocks under rules that nodes enforce). Not exchanges (they cannot change the protocol). The UASF demonstrated that **full node operators — users running the software — are the ultimate arbiter of Bitcoin's consensus rules**. This is by design, and it is the reason Bitcoin cannot be captured.`,
+
+    visual: `TIMELINE OF THE SCALING DEBATE
+================================
+
+  2015  Block space filling up, fees rising
+        Bitcoin XT: 8 MB hard fork proposal -> rejected by community
+
+  2016  Bitcoin Classic: 2 MB hard fork -> rejected
+        Bitcoin Unlimited: no fixed limit -> rejected
+        Hong Kong Agreement: miners promise SegWit + 2 MB HF
+        (agreement never honored)
+
+  Feb 2017  New York Agreement (NYA / SegWit2x):
+            Miners + companies agree to:
+            1. Activate SegWit (soft fork)
+            2. 2 MB base block hard fork within 6 months
+
+  May 2017  BIP 148 (UASF) announced:
+            "If SegWit not signaled by Aug 1, 2017,
+             BIP 148 nodes REJECT non-signaling blocks"
+            -> Full nodes enforcing rules, not miners
+
+  Aug 1, 2017  UASF deadline hits
+               Miners rush to signal; SegWit locks in within days
+               Bitcoin Cash hard fork (8 MB blocks)
+
+  Nov 2017  SegWit2x (the 2 MB part of NYA) cancelled
+            Insufficient consensus; strong community opposition
+
+  Result
+  ------
+  Bitcoin (BTC): SegWit, original chain, ~99%+ market cap
+  Bitcoin Cash (BCH): 8 MB blocks, ~0.3% of BTC value by 2024
+  Bitcoin SV, eCash: further forks of BCH, negligible value
+
+
+WHO HAS POWER IN BITCOIN?
+==========================
+
+  Entity         What they control          What they DON'T
+  ----------     ------------------------   -----------------
+  Core devs      Reference software         Protocol enforcement
+  Miners         Block production           Rule validity
+                 Transaction ordering       (nodes enforce)
+  Exchanges      Fiat gateway access        Protocol changes
+  Full nodes     RULE ENFORCEMENT           Block creation
+  (USERS)        Define "valid Bitcoin"
+                 <- Ultimate authority
+
+
+HARD FORK vs SOFT FORK
+=======================
+
+  SOFT FORK                  HARD FORK
+  ---------                  ---------
+  Tightens existing rules    Loosens or changes rules
+  Old nodes accept new       Old nodes reject new blocks
+  Backward compatible        Chain splits if not universal
+  SegWit, Taproot            Bitcoin Cash, Ethereum Classic`,
+
+    simpleExample: `Imagine a city's constitution. Legal scholars (developers) draft amendment proposals. The construction industry (miners) builds to spec. Real estate companies (exchanges) market properties. But the **residents** (full node operators) enforce the zoning laws — they vote with their feet by only buying property that follows the rules. Even if 90% of construction companies broke zoning laws, if residents refused to buy those buildings, they would be worthless. UASF was the residents voting.`,
+
+    details: [
+      `**The BIP process**: Bitcoin Improvement Proposals are the formal mechanism for proposing protocol changes. Anyone can write a BIP; adoption requires rough consensus — not a committee vote, not a CEO decision. BIP 141 (SegWit) and BIP 148 (UASF) are the defining examples.`,
+      `**Why miners could not force SegWit2x**: Miners building SegWit2x blocks could produce blocks — but if the majority of full nodes ran BIP 148 software rejecting those blocks, those blocks earned nothing. Mining on a chain nobody validates is economically irrational. Economic self-interest forced compliance.`,
+      `**Bitcoin Cash's core argument**: BCH proponents argued small blocks priced out everyday users from on-chain transactions, betraying the "peer-to-peer electronic cash" mission. They wanted high throughput directly on-chain for global adoption.`,
+      `**Bitcoin's counter-argument**: Larger blocks increase full node hardware requirements, centralizing validation. A network where only large data centers can run nodes sacrifices censorship resistance. Layer 2 scales without compromising base layer security.`,
+      `**The economic conflict**: Miners who signed the NYA had revenue interests tied to on-chain fees. Lightning routes payments off-chain, reducing miner fee income over time. This was a genuine economic conflict of interest, not purely a technical disagreement.`,
+      `**Market verdict**: At the BCH fork, every Bitcoin holder received equivalent BCH. BCH immediately traded at ~10% of BTC price, then continued declining. By 2024, BCH trades at roughly 0.3% of BTC's price. The market chose the conservative, decentralized chain.`,
+    ],
+
+    keyTerms: [
+      { term: 'UASF', definition: 'User-Activated Soft Fork — a soft fork enforced by full node operators without waiting for miner majority signaling. BIP 148 was the defining example.' },
+      { term: 'Hard fork', definition: 'A non-backward-compatible protocol change. Old nodes reject new blocks, causing a permanent chain split if not universally adopted.' },
+      { term: 'Soft fork', definition: 'A backward-compatible protocol tightening. Old nodes still accept blocks produced by upgraded nodes.' },
+      { term: 'Bitcoin Cash (BCH)', definition: 'A 2017 hard fork of Bitcoin with an 8 MB base block limit. Trades some decentralization for higher on-chain transaction throughput.' },
+      { term: 'New York Agreement (NYA)', definition: 'A 2017 agreement by miners and companies to activate SegWit + a 2 MB hard fork. The SegWit part succeeded; the 2 MB part was cancelled due to community opposition.' },
+      { term: 'BIP', definition: 'Bitcoin Improvement Proposal — the formal process for proposing and documenting Bitcoin protocol changes. Open to anyone.' },
+      { term: 'Rough consensus', definition: 'Bitcoin\'s governance model: no formal voting, but broad agreement among developers, node operators, and users before changes are deployed.' },
+    ],
+
+    commonConfusion: [
+      `**"Bitcoin Core controls Bitcoin"** — Core is the dominant reference implementation, but any software following consensus rules is valid. The block size wars proved that Core's decisions do not unilaterally determine protocol rules — users choose which software to run.`,
+      `**"Miners have final say"** — Miners have significant practical influence (they order and include transactions). But full nodes enforce validity. A miner producing an invalid block earns nothing because full nodes reject it.`,
+      `**"Bitcoin Cash failed because of poor marketing"** — BCH's lower market value reflects genuine market assessment of security and decentralization trade-offs. Larger blocks require more powerful nodes, concentrating validation. The market valued decentralization over raw throughput.`,
+      `**"The governance debate is over"** — The base block size question is settled. But debates continue: Ordinals/inscriptions data usage, OP_RETURN limits, fee market sustainability post-subsidy. The governance mechanism — rough consensus via node operators — remains the same.`,
+    ],
+
+    recallPrompts: [
+      { question: 'What is a UASF and how did BIP 148 work mechanically?', hint: 'Full node operators signal they will reject non-compliant blocks on a specific ___, forcing miners to comply or lose their block rewards.' },
+      { question: 'Why could miners not force through SegWit2x even with majority hash power?', hint: 'Blocks that full nodes reject are worthless. Miners earn nothing mining on a chain that nobody ___.' },
+      { question: 'What is the key difference between a soft fork and a hard fork?', hint: 'Soft = ___ compatible (old nodes still accept new blocks). Hard = old nodes ___ new blocks.' },
+    ],
+
+    cheatSheet: [
+      'Block size wars: 2015-2017, resolved by UASF + SegWit activated Aug 2017',
+      'Bitcoin Cash: 8 MB hard fork, ~0.3% of BTC market value by 2024',
+      'UASF (BIP 148): full node operators enforce rules, not miners',
+      'Soft fork = backward compatible; hard fork = chain split risk',
+      'BIP process: anyone proposes; adoption requires rough consensus',
+      'Miners propose blocks; full nodes define what counts as valid',
+      'NYA: SegWit activated; 2 MB hard fork part was cancelled',
+      'Market verdict: users chose the conservative, decentralized chain',
+    ],
+  },
 ]

@@ -46,12 +46,12 @@ const stages = [
 ]
 
 const colorMap: Record<string, { ring: string; bg: string; border: string; text: string; dot: string; line: string }> = {
-  indigo: { ring: 'ring-indigo-300', bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-800', dot: 'bg-indigo-500', line: 'bg-indigo-300' },
-  blue: { ring: 'ring-blue-300', bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-800', dot: 'bg-blue-500', line: 'bg-blue-300' },
-  purple: { ring: 'ring-purple-300', bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-800', dot: 'bg-purple-500', line: 'bg-purple-300' },
-  amber: { ring: 'ring-amber-300', bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-800', dot: 'bg-amber-500', line: 'bg-amber-300' },
-  emerald: { ring: 'ring-emerald-300', bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-800', dot: 'bg-emerald-500', line: 'bg-emerald-300' },
-  green: { ring: 'ring-green-300', bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-800', dot: 'bg-green-500', line: 'bg-green-300' },
+  indigo: { ring: 'ring-indigo-300 dark:ring-indigo-700', bg: 'bg-indigo-50 dark:bg-indigo-900/20', border: 'border-indigo-200 dark:border-indigo-800', text: 'text-indigo-800 dark:text-indigo-300', dot: 'bg-indigo-500', line: 'bg-indigo-300 dark:bg-indigo-700' },
+  blue:   { ring: 'ring-blue-300 dark:ring-blue-700',   bg: 'bg-blue-50 dark:bg-blue-900/20',   border: 'border-blue-200 dark:border-blue-800',   text: 'text-blue-800 dark:text-blue-300',   dot: 'bg-blue-500',   line: 'bg-blue-300 dark:bg-blue-700' },
+  purple: { ring: 'ring-purple-300 dark:ring-purple-700', bg: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-purple-200 dark:border-purple-800', text: 'text-purple-800 dark:text-purple-300', dot: 'bg-purple-500', line: 'bg-purple-300 dark:bg-purple-700' },
+  amber:  { ring: 'ring-amber-300 dark:ring-amber-700',  bg: 'bg-amber-50 dark:bg-amber-900/20',  border: 'border-amber-200 dark:border-amber-800',  text: 'text-amber-800 dark:text-amber-300',  dot: 'bg-amber-500',  line: 'bg-amber-300 dark:bg-amber-700' },
+  emerald:{ ring: 'ring-emerald-300 dark:ring-emerald-700', bg: 'bg-emerald-50 dark:bg-emerald-900/20', border: 'border-emerald-200 dark:border-emerald-800', text: 'text-emerald-800 dark:text-emerald-300', dot: 'bg-emerald-500', line: 'bg-emerald-300 dark:bg-emerald-700' },
+  green:  { ring: 'ring-green-300 dark:ring-green-700',  bg: 'bg-green-50 dark:bg-green-900/20',  border: 'border-green-200 dark:border-green-800',  text: 'text-green-800 dark:text-green-300',  dot: 'bg-green-500',  line: 'bg-green-300 dark:bg-green-700' },
 }
 
 const feeBarData = [
@@ -69,9 +69,9 @@ export default function TxLifecycleVisual() {
   const c = colorMap[stages[activeStage].color]
 
   return (
-    <div className="my-6 rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-      <div className="px-5 py-3 bg-gray-50 border-b border-gray-200">
-        <p className="text-xs font-bold tracking-widest text-gray-400 uppercase flex items-center gap-2">
+    <div className="my-6 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+      <div className="px-5 py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <p className="text-xs font-bold tracking-widest text-gray-400 dark:text-gray-500 uppercase flex items-center gap-2">
           <span className="text-amber-500">◆</span> Transaction Pipeline — Click each stage
         </p>
       </div>
@@ -89,15 +89,15 @@ export default function TxLifecycleVisual() {
                   onClick={() => setActiveStage(i)}
                   className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 cursor-pointer
                     ${isActive ? `${sc.bg} border-2 ${sc.border} shadow-md ring-2 ${sc.ring} ring-offset-1` :
-                      isPast ? 'bg-gray-50 border-2 border-gray-100' :
-                      'bg-white border-2 border-transparent hover:bg-gray-50'}`}
+                      isPast ? 'bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700' :
+                      'bg-white dark:bg-gray-900 border-2 border-transparent hover:bg-gray-50 dark:hover:bg-gray-800'}`}
                 >
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0 transition-all
-                    ${isActive ? `${sc.dot} text-white shadow-sm` : isPast ? 'bg-gray-200 text-gray-500' : 'bg-gray-100 text-gray-400'}`}>
+                    ${isActive ? `${sc.dot} text-white shadow-sm` : isPast ? 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'}`}>
                     {isPast ? '✓' : s.icon}
                   </div>
                   <div className="text-left flex-1">
-                    <p className={`text-sm font-semibold ${isActive ? sc.text : isPast ? 'text-gray-500' : 'text-gray-700'}`}>
+                    <p className={`text-sm font-semibold ${isActive ? sc.text : isPast ? 'text-gray-500 dark:text-gray-400' : 'text-gray-700 dark:text-gray-300'}`}>
                       {s.label}
                     </p>
                     {isActive && (
@@ -111,13 +111,13 @@ export default function TxLifecycleVisual() {
                       </ul>
                     )}
                   </div>
-                  <div className={`text-xs font-mono ${isActive ? sc.text : 'text-gray-300'}`}>
+                  <div className={`text-xs font-mono ${isActive ? sc.text : 'text-gray-300 dark:text-gray-600'}`}>
                     {i + 1}/{stages.length}
                   </div>
                 </button>
                 {i < stages.length - 1 && (
                   <div className="flex justify-start ml-9 py-0.5">
-                    <div className={`w-0.5 h-4 transition-colors duration-300 ${isPast ? sc.line : 'bg-gray-200'}`} />
+                    <div className={`w-0.5 h-4 transition-colors duration-300 ${isPast ? sc.line : 'bg-gray-200 dark:bg-gray-700'}`} />
                   </div>
                 )}
               </div>
@@ -130,7 +130,7 @@ export default function TxLifecycleVisual() {
           <button
             onClick={() => setActiveStage(Math.max(0, activeStage - 1))}
             disabled={activeStage === 0}
-            className="px-4 py-2 rounded-lg text-xs font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+            className="px-4 py-2 rounded-lg text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
           >
             ← Previous
           </button>
@@ -144,8 +144,8 @@ export default function TxLifecycleVisual() {
         </div>
 
         {/* Fee Rate Priority */}
-        <div className="mt-8 pt-6 border-t border-gray-100">
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 text-center">Fee Rate Priority</p>
+        <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800">
+          <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-4 text-center">Fee Rate Priority</p>
           <div className="space-y-2 max-w-sm mx-auto">
             {feeBarData.map((f, i) => (
               <div
@@ -154,8 +154,8 @@ export default function TxLifecycleVisual() {
                 onMouseEnter={() => setHoveredFee(i)}
                 onMouseLeave={() => setHoveredFee(null)}
               >
-                <span className="text-[10px] text-gray-400 w-20 text-right shrink-0 font-mono">{f.label}</span>
-                <div className="flex-1 bg-gray-100 rounded-full h-5 overflow-hidden">
+                <span className="text-[10px] text-gray-400 dark:text-gray-500 w-20 text-right shrink-0 font-mono">{f.label}</span>
+                <div className="flex-1 bg-gray-100 dark:bg-gray-800 rounded-full h-5 overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all duration-500 flex items-center justify-end pr-2
                       ${hoveredFee === i ? 'bg-amber-500' : 'bg-amber-400/70'}`}
@@ -164,11 +164,11 @@ export default function TxLifecycleVisual() {
                     {f.pct > 30 && <span className="text-[10px] text-white font-medium">{f.tier}</span>}
                   </div>
                 </div>
-                {f.pct <= 30 && <span className="text-[10px] text-gray-400 shrink-0">{f.tier}</span>}
+                {f.pct <= 30 && <span className="text-[10px] text-gray-400 dark:text-gray-500 shrink-0">{f.tier}</span>}
               </div>
             ))}
           </div>
-          <p className="text-[10px] text-gray-400 text-center mt-3">
+          <p className="text-[10px] text-gray-400 dark:text-gray-500 text-center mt-3">
             Fee rate = fee ÷ tx size (sat/vB). Miners pick highest rate first to maximize revenue.
           </p>
         </div>

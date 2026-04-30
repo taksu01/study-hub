@@ -3,7 +3,12 @@
     "allow": [
       "Bash(npm install *)",
       "Bash(npm run *)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/)",
+      "Bash(awk '{print $NF}')",
+      "Bash(xargs -I {} basename {})",
+      "Bash(git -C \"e:/Project/App/study-hub\" checkout HEAD -- apps/bitcoin-study/src/data/sections.ts)",
+      "Bash(npx tsc *)",
+      "Bash(netstat -ano)"
     ]
   }
 }

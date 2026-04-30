@@ -32,32 +32,32 @@ const nodeTypes = [
     icon: '🖥',
     downloads: 'All blocks + all transactions',
     trust: 'Trusts no one — verifies every rule independently',
-    color: 'border-emerald-300 bg-emerald-50',
-    textColor: 'text-emerald-800',
+    color: 'border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/20',
+    textColor: 'text-emerald-800 dark:text-emerald-300',
   },
   {
     type: 'Pruned Node',
     icon: '💾',
     downloads: 'All blocks (discards old ones)',
     trust: 'Same verification — deletes old blocks to save disk',
-    color: 'border-blue-300 bg-blue-50',
-    textColor: 'text-blue-800',
+    color: 'border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20',
+    textColor: 'text-blue-800 dark:text-blue-300',
   },
   {
     type: 'SPV / Light Client',
     icon: '📱',
     downloads: 'Headers only + Merkle proofs',
     trust: 'Trusts miners for validity — checks inclusion only',
-    color: 'border-amber-300 bg-amber-50',
-    textColor: 'text-amber-800',
+    color: 'border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20',
+    textColor: 'text-amber-800 dark:text-amber-300',
   },
   {
     type: 'Miner',
     icon: '⛏',
     downloads: 'Full node + PoW search',
     trust: 'Full verification + creates new blocks',
-    color: 'border-purple-300 bg-purple-50',
-    textColor: 'text-purple-800',
+    color: 'border-purple-300 dark:border-purple-700 bg-purple-50 dark:bg-purple-900/20',
+    textColor: 'text-purple-800 dark:text-purple-300',
   },
 ]
 
@@ -95,9 +95,9 @@ export default function NodesVisual() {
   ]
 
   return (
-    <div className="my-6 rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-      <div className="px-5 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between flex-wrap gap-2">
-        <p className="text-xs font-bold tracking-widest text-gray-400 uppercase flex items-center gap-2">
+    <div className="my-6 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+      <div className="px-5 py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-wrap gap-2">
+        <p className="text-xs font-bold tracking-widest text-gray-400 dark:text-gray-500 uppercase flex items-center gap-2">
           <span className="text-amber-500">◆</span> Network Explorer
         </p>
         <div className="flex gap-1">
@@ -106,7 +106,7 @@ export default function NodesVisual() {
               key={t.key}
               onClick={() => setTab(t.key)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer
-                ${tab === t.key ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-100'}`}
+                ${tab === t.key ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
             >
               {t.label}
             </button>
@@ -117,10 +117,10 @@ export default function NodesVisual() {
       <div className="p-6 sm:p-8">
         {tab === 'topology' && (
           <div className="flex flex-col items-center gap-4">
-            <p className="text-xs text-gray-500">Click "Broadcast" to see a transaction propagate via gossip</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Click "Broadcast" to see a transaction propagate via gossip</p>
 
             {/* Network visualization */}
-            <div className="relative w-full max-w-md h-64 bg-gray-50 rounded-xl border border-gray-200">
+            <div className="relative w-full max-w-md h-64 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
               <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
                 {edges.map(([a, b]) => {
                   const na = nodes.find(n => n.id === a)!
@@ -145,10 +145,10 @@ export default function NodesVisual() {
                   style={{ left: `${n.x}%`, top: `${n.y}%` }}
                 >
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold border-2 transition-all duration-300
-                    ${n.lit ? 'bg-amber-400 border-amber-500 text-white shadow-lg' : 'bg-white border-gray-300 text-gray-500'}`}>
+                    ${n.lit ? 'bg-amber-400 border-amber-500 text-white shadow-lg' : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400'}`}>
                     {n.id}
                   </div>
-                  <span className="text-[8px] text-gray-400 mt-0.5">{n.label}</span>
+                  <span className="text-[8px] text-gray-400 dark:text-gray-500 mt-0.5">{n.label}</span>
                 </div>
               ))}
             </div>
@@ -161,10 +161,10 @@ export default function NodesVisual() {
               {propagating ? 'Propagating...' : 'Broadcast Transaction'}
             </button>
 
-            <div className="rounded-xl bg-gray-50 border border-gray-200 p-3 max-w-sm text-center">
-              <p className="text-xs text-gray-600">
+            <div className="rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-3 max-w-sm text-center">
+              <p className="text-xs text-gray-600 dark:text-gray-400">
                 Each node: <strong>validate</strong> → <strong>add to mempool</strong> → <strong>relay to peers</strong><br />
-                <span className="text-gray-400">No central server. No master node. ~8-125 peer connections each.</span>
+                <span className="text-gray-400 dark:text-gray-500">No central server. No master node. ~8-125 peer connections each.</span>
               </p>
             </div>
           </div>
@@ -177,17 +177,17 @@ export default function NodesVisual() {
                 key={nt.type}
                 onClick={() => setActiveType(activeType === i ? null : i)}
                 className={`rounded-xl border-2 p-4 text-left transition-all cursor-pointer
-                  ${activeType === i ? `${nt.color} shadow-md` : 'border-gray-200 bg-white hover:border-gray-300'}`}
+                  ${activeType === i ? `${nt.color} shadow-md` : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600'}`}
               >
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-xl">{nt.icon}</span>
-                  <p className={`text-sm font-bold ${activeType === i ? nt.textColor : 'text-gray-800'}`}>{nt.type}</p>
+                  <p className={`text-sm font-bold ${activeType === i ? nt.textColor : 'text-gray-800 dark:text-gray-200'}`}>{nt.type}</p>
                 </div>
-                <p className="text-xs text-gray-600 mb-1">
+                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
                   <span className="font-medium">Downloads:</span> {nt.downloads}
                 </p>
                 {activeType === i && (
-                  <p className={`text-xs ${nt.textColor} mt-2 p-2 rounded-lg bg-white/60 leading-relaxed`}>
+                  <p className={`text-xs ${nt.textColor} mt-2 p-2 rounded-lg bg-white/60 dark:bg-black/20 leading-relaxed`}>
                     {nt.trust}
                   </p>
                 )}
