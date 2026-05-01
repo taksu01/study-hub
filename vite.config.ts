@@ -5,6 +5,7 @@ const APP_PORTS: Record<string, number> = {
   'bitcoin-study': 5175,
   'invest-study': 5176,
   'math-speeed': 5177,
+  'dev-study': 5178,
 }
 
 const proxy = Object.fromEntries(

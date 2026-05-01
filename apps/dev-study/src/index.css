@@ -1,0 +1,149 @@
+@import "tailwindcss";
+
+@theme {
+  --font-family-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-family-mono: 'JetBrains Mono', ui-monospace, 'Courier New', monospace;
+
+  --color-canvas: #090d1a;
+  --color-surface: #0f1629;
+  --color-surface2: #141d35;
+  --color-rim: #1e2d4d;
+  --color-rim2: #253352;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-family-sans);
+  background: var(--color-canvas);
+  color: #e2e8f0;
+  antialiased: true;
+}
+
+/* Light mode overrides */
+html.light body {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+html.light .bg-canvas { background: #f8fafc !important; }
+html.light .bg-surface { background: #ffffff !important; }
+html.light .bg-surface2 { background: #f1f5f9 !important; }
+html.light .border-rim { border-color: #e2e8f0 !important; }
+html.light .text-slate-200 { color: #1e293b !important; }
+html.light .text-slate-300 { color: #334155 !important; }
+html.light .text-slate-400 { color: #475569 !important; }
+html.light .text-slate-500 { color: #64748b !important; }
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #253352;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #38bdf8;
+}
+
+html.light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+
+/* Code font utility */
+.font-code {
+  font-family: var(--font-family-mono);
+}
+
+/* Glow effects for diagram areas */
+.glow-sky {
+  box-shadow: 0 0 0 2px #38bdf8, 0 0 20px rgba(56, 189, 248, 0.3);
+}
+.glow-violet {
+  box-shadow: 0 0 0 2px #a78bfa, 0 0 20px rgba(167, 139, 250, 0.3);
+}
+.glow-amber {
+  box-shadow: 0 0 0 2px #fbbf24, 0 0 20px rgba(251, 191, 36, 0.3);
+}
+.glow-emerald {
+  box-shadow: 0 0 0 2px #34d399, 0 0 20px rgba(52, 211, 153, 0.3);
+}
+.glow-rose {
+  box-shadow: 0 0 0 2px #fb7185, 0 0 20px rgba(251, 113, 133, 0.3);
+}
+
+/* Pulse animation */
+@keyframes pulse-ring {
+  0% { opacity: 1; }
+  50% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 1.5s ease-in-out infinite;
+}
+
+/* Stack item slide */
+@keyframes slide-in-top {
+  from { transform: translateY(-12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-slide-in {
+  animation: slide-in-top 0.25s ease-out;
+}
+
+/* Fade in */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+/* Event loop spinner */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 2s linear infinite;
+}
+
+/* Sidebar active indicator */
+.lesson-active {
+  position: relative;
+}
+.lesson-active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  background: #38bdf8;
+  border-radius: 0 2px 2px 0;
+}
+
+/* Progress bar */
+.progress-bar {
+  transition: width 0.4s ease;
+}
+
+/* Code block line highlight */
+.code-line-active {
+  background: rgba(56, 189, 248, 0.15);
+  border-left: 3px solid #38bdf8;
+  margin-left: -3px;
+}
