@@ -1,8 +1,12 @@
+import { Sparkles, Layers, Wallet, ShieldCheck, CalendarClock, HelpCircle, AlertTriangle } from 'lucide-react'
 import {
-  SectionShell, SectionHeader, Subsection, Prose,
-  InteractiveFlowMap, ExpandableCardGrid, CompareTable,
-  MiniRecallBlock, CheatSheetPanel, InfoCallout, TryThisCallout
+  SectionShell, SectionHeader, Subsection, Takeaway, Points, Example,
+  ExpandableCardGrid, CompareTable, MiniRecallBlock, CheatSheetPanel,
+  InfoCallout, CommonConfusionBlock,
 } from '../components/ui'
+import { ModelChooser } from '../components/viz/ModelChooser'
+import { CostLab } from '../components/viz/CostLab'
+import { CodeBlock, Code } from '../components/CodeBlock'
 
 export default function Section09() {
   return (
@@ -10,225 +14,346 @@ export default function Section09() {
       <SectionHeader
         number={9}
         title="Your AI Stack"
-        subtitle="How to build your personal AI ecosystem — the right models for the right tasks, cost-optimized and privacy-aware."
+        subtitle="Not one tool — four layers, and a habit of routing each task to the cheapest thing that can do it well."
       />
 
-      <Subsection title="The Personal AI Ecosystem">
-        <Prose>
-          <p>The best AI setup isn't one tool — it's a small, deliberate ecosystem. Each layer serves a different purpose: you have a primary thinking partner, a local private AI, an automation layer, and a knowledge layer. Click each node to understand how it fits.</p>
-        </Prose>
-        <div className="mt-4" />
-        <InteractiveFlowMap
-          vertical={true}
-          nodes={[
-            {
-              id: 'primary',
-              label: 'Primary AI (Cloud)',
-              description: 'Your main AI tool for high-quality reasoning, coding, and complex tasks. Claude Sonnet or GPT-4o. Use for: coding assistance, research, writing, complex problem-solving. Pay for this — the quality difference from free tiers is significant for daily professional use.',
-              color: 'purple',
-            },
-            {
-              id: 'local',
-              label: 'Local AI (Ollama)',
-              description: 'Runs on your machine for private, sensitive, or high-volume tasks. Llama 3.3 70B (if you have the RAM) or Llama 3.2 for everyday use. Free after hardware cost. Use for: processing sensitive documents, RAG over private notes, experimentation, tasks where you want zero data exposure.',
-              color: 'blue',
-            },
-            {
-              id: 'automation',
-              label: 'Automation Layer (n8n)',
-              description: 'Workflows that run without your input: scheduled reports, webhook handlers, data pipelines, notifications. Self-hosted n8n connects your cloud and local AI to everything else — WhatsApp, email, databases, APIs. The plumbing that makes things run automatically.',
-              color: 'orange',
-            },
-            {
-              id: 'knowledge',
-              label: 'Knowledge Layer (RAG)',
-              description: 'Your documents, notes, and data made queryable by AI. ChromaDB or Open WebUI\'s built-in RAG stores your embeddings. When you ask about your own projects, decisions, or notes — this layer retrieves the relevant context and feeds it to the model.',
-              color: 'green',
-            },
-          ]}
-        />
-      </Subsection>
+      <Subsection title="The four layers" icon={<Layers className="w-4 h-4 text-violet-500" />}>
+        <Takeaway>
+          A good setup is small and deliberate. One capable cloud model, one local model, an
+          automation layer, and a knowledge layer. Everything else is a variation.
+        </Takeaway>
 
-      <Subsection title="Choosing the Right Model for the Right Task">
-        <CompareTable
-          headers={['Best Model', 'Why', 'Cost']}
-          rows={[
-            { attribute: 'Complex reasoning / coding', values: ['Claude Sonnet 4.6', 'Best reasoning + 200k context + coding', 'Paid API'] },
-            { attribute: 'Everyday chat / quick tasks', values: ['Claude Haiku 4.5 or GPT-4o mini', 'Fast and cheap, good enough for simple tasks', 'Very cheap'] },
-            { attribute: 'Deep reasoning / math', values: ['Claude Opus 4.7 or o3', 'Extended thinking, highest accuracy on hard problems', 'Expensive'] },
-            { attribute: 'Local general purpose', values: ['Llama 3.3 70B (via Ollama)', 'Near cloud quality, fully local', 'Free'] },
-            { attribute: 'Local fast (limited RAM)', values: ['Llama 3.2 or Phi-4', 'Good quality, runs on 16GB RAM', 'Free'] },
-            { attribute: 'Local coding', values: ['Qwen2.5-Coder 14B', 'Best local coding model', 'Free'] },
-            { attribute: 'Local reasoning', values: ['DeepSeek-R1 32B', 'Shows chain-of-thought, excellent logic', 'Free'] },
-            { attribute: 'Long documents (>200k tokens)', values: ['Gemini 2.5 Pro', '1M token context window, multimodal', 'Paid API'] },
-          ]}
-        />
+        <div className="space-y-2.5 mb-6">
+          {[
+            {
+              name: 'Primary cloud model', tool: 'Claude Sonnet or GPT-4o',
+              job: 'Your thinking partner. Coding, research, writing, anything hard.',
+              note: 'Pay for this one. The gap between free tiers and a paid frontier model is the difference you feel daily.',
+              colour: 'border-violet-200 bg-violet-50',
+            },
+            {
+              name: 'Local model', tool: 'Ollama + Llama 3.1 8B',
+              job: 'Private work, high-volume work, offline work.',
+              note: 'Free per call, which changes what is worth automating at all.',
+              colour: 'border-blue-200 bg-blue-50',
+            },
+            {
+              name: 'Automation layer', tool: 'n8n, or cron and a script',
+              job: 'Things that run without you — digests, webhooks, pipelines.',
+              note: 'The plumbing connecting both models to everything else you use.',
+              colour: 'border-amber-200 bg-amber-50',
+            },
+            {
+              name: 'Knowledge layer', tool: 'Open WebUI collections or Chroma',
+              job: 'Your notes and documents, made queryable.',
+              note: 'Turns "I wrote that down somewhere" into an answer with a citation.',
+              colour: 'border-emerald-200 bg-emerald-50',
+            },
+          ].map(l => (
+            <div key={l.name} className={`rounded-xl border p-4 ${l.colour}`}>
+              <div className="flex items-baseline justify-between gap-2 flex-wrap mb-1">
+                <h4 className="text-sm font-semibold text-slate-800">{l.name}</h4>
+                <code className="text-[12px] font-mono text-slate-600 bg-white/70 px-2 py-0.5 rounded">
+                  {l.tool}
+                </code>
+              </div>
+              <p className="text-sm text-slate-700">{l.job}</p>
+              <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">{l.note}</p>
+            </div>
+          ))}
+        </div>
+
         <InfoCallout type="tip">
-          <strong>The 80/20 rule:</strong> Claude Sonnet handles 80% of everything you'll throw at it. Add Ollama for privacy-sensitive work and Claude Haiku for high-volume cheap tasks. You don't need 10 different models — start with 2-3 and expand only when you hit a specific gap.
+          <strong>Do not start with four.</strong> Get the cloud model working, then add Ollama when
+          you first hit something you would rather not upload. The other two layers earn their place
+          later, or never.
         </InfoCallout>
       </Subsection>
 
-      <Subsection title="Cost Optimization">
-        <Prose>
-          <p>AI costs can spiral if you're not deliberate. Here are the levers you actually control.</p>
-        </Prose>
-        <ExpandableCardGrid columns={2} cards={[
+      <Subsection title="Routing: which model for this task?" icon={<Sparkles className="w-4 h-4 text-violet-500" />}>
+        <Takeaway>
+          Ask the questions in this order. Privacy first, because it eliminates options rather than
+          ranking them; then volume; then difficulty.
+        </Takeaway>
+
+        <ModelChooser />
+
+        <CompareTable
+          headers={['Reach for', 'Because']}
+          rows={[
+            { attribute: 'Coding and hard reasoning', values: ['Claude Sonnet', 'Best balance of capability and cost, with 200k context'] },
+            { attribute: 'High-volume simple work', values: ['Claude Haiku / GPT-4o-mini', '10–12× cheaper and entirely adequate for classification and extraction'] },
+            { attribute: 'Genuinely hard multi-step problems', values: ['Claude Opus with extended thinking, o-series', 'Only when a standard model has repeatedly failed'] },
+            { attribute: 'Anything sensitive', values: ['Ollama + Llama 3.1 8B', 'Nothing leaves the machine — the only guarantee that holds'] },
+            { attribute: 'Local coding', values: ['Qwen 2.5 Coder 14B', 'Beats larger general models on code'] },
+            { attribute: 'Local reasoning', values: ['DeepSeek-R1', 'Shows its chain of thought; strong on maths and logic'] },
+            { attribute: 'Inputs over 200k tokens', values: ['Gemini 2.5 Pro', 'One million token window, and the cheapest input rate'] },
+          ]}
+        />
+
+        <InfoCallout type="tip">
+          <strong>The 80/20 of this whole section:</strong> one mid-tier cloud model handles most of
+          what you will throw at it. Add a local model for privacy and a cheap model for volume. Three
+          models is a complete stack; ten is a hobby.
+        </InfoCallout>
+      </Subsection>
+
+      <Subsection title="What it actually costs" icon={<Wallet className="w-4 h-4 text-violet-500" />}>
+        <Takeaway>
+          Model choice dominates. Prompt length matters far less than people assume — until you
+          multiply it by volume, at which point caching becomes the biggest single lever.
+        </Takeaway>
+
+        <CostLab />
+
+        <Points items={[
+          <><strong>Tier your models.</strong> There is a 10–60× spread between the cheapest and most capable tier. Getting routing right beats every other optimisation combined.</>,
+          <><strong>Cache repeated prefixes.</strong> A long system prompt or a fixed document sent on every call should be cached — roughly a tenth of the rate on the cached portion.</>,
+          <><strong>Go local above a threshold.</strong> Somewhere past a few thousand calls a day, hardware you own is cheaper than tokens you rent.</>,
+          <><strong>Bound your outputs.</strong> Output tokens cost 4–5× input tokens. "Answer in three bullets" is a cost control, not just a style preference.</>,
+        ]} />
+
+        <CodeBlock tabs={[
           {
-            title: 'Model Tiering',
-            subtitle: 'Match model to task complexity',
-            content: 'Use Haiku for classification, extraction, simple Q&A. Use Sonnet for reasoning, writing, coding. Use Opus/o1 only for the hardest problems.',
-            details: 'Current Claude pricing (per million tokens, input/output):\n• Haiku 4.5: $0.25/$1.25 — very cheap, great for simple tasks\n• Sonnet 4.6: $3/$15 — mid-tier, best balance of quality and cost\n• Opus 4.7: $15/$75 — highest quality, for hard problems only\n\nA 10–60x cost difference across the tier. Getting model selection right is the single biggest cost lever. Always start with Haiku for prototyping, measure quality, upgrade only when needed.',
-            tags: ['10x cost difference per tier'],
-            color: 'green',
+            label: 'Prompt caching',
+            language: 'python',
+            note: 'Mark the stable prefix. Everything after it varies per call and is billed normally.',
+            code: `msg = client.messages.create(
+    model="claude-sonnet-4-6",
+    max_tokens=1024,
+    system=[
+        {
+            "type": "text",
+            "text": LONG_STANDING_INSTRUCTIONS,   # identical on every call
+            "cache_control": {"type": "ephemeral"},
+        },
+        {
+            "type": "text",
+            "text": REFERENCE_DOCUMENT,          # also stable — also cached
+            "cache_control": {"type": "ephemeral"},
+        },
+    ],
+    messages=[{"role": "user", "content": user_question}],
+)
+
+# The response reports what was read from cache versus written to it.
+print(msg.usage.cache_read_input_tokens, msg.usage.cache_creation_input_tokens)`,
           },
           {
-            title: 'Prompt Caching',
-            subtitle: 'Cache repeated context',
-            content: 'If you send the same system prompt or context repeatedly, Anthropic caches it after the first call.',
-            details: 'Claude supports prompt caching — if you add cache_control to large, repeated blocks (system prompts, reference documents), subsequent calls that reuse that content cost 90% less. Great for RAG applications where you repeatedly send the same document chunks. Implement with the cache_control parameter in the Anthropic SDK.',
-            tags: ['90% discount on cached tokens'],
-            color: 'blue',
-          },
-          {
-            title: 'Local for High Volume',
-            subtitle: 'Use Ollama for zero-cost scale',
-            content: 'Processing 10k documents? Personal assistant with hundreds of daily messages? Go local.',
-            details: 'Cloud APIs at $0.003/1k input tokens: processing 10 million tokens = $30. At scale this adds up fast. Ollama is free after hardware. For personal productivity tools, a one-time GPU investment often pays back in months if you\'re a heavy AI user.',
-            tags: ['Zero per-query cost'],
-            color: 'orange',
-          },
-          {
-            title: 'Shorter Prompts',
-            subtitle: 'Every token costs',
-            content: 'Optimize your prompts. Remove filler, be specific, use structured formats instead of prose.',
-            details: 'A 500-token system prompt sent with every message at 1000 messages/day = 500k tokens/day just in repeated instructions. Use prompt caching for long system prompts. Keep user messages focused. Request concise outputs (specify max length). These aren\'t premature optimizations — they\'re just good engineering.',
-            tags: ['Fewer tokens = lower cost'],
-            color: 'purple',
+            label: 'Routing by task',
+            language: 'python',
+            note: 'A dozen lines that typically cut a bill by more than half.',
+            code: `FAST = "claude-haiku-4-5-20251001"
+GOOD = "claude-sonnet-4-6"
+LOCAL = "llama3.1:8b"
+
+
+def route(task_kind: str, sensitive: bool = False) -> tuple[str, object]:
+    """Pick a model before picking a prompt."""
+    if sensitive:
+        return LOCAL, ollama_client
+
+    if task_kind in {"classify", "extract", "tag", "summarise_short"}:
+        return FAST, cloud_client
+
+    return GOOD, cloud_client`,
           },
         ]} />
       </Subsection>
 
-      <Subsection title="Privacy Considerations">
-        <Prose>
-          <p>Not everything should go to cloud AI. Understanding where your data goes is important both for personal privacy and for professional/legal compliance.</p>
-        </Prose>
+      <Subsection title="Privacy — where the data actually goes" icon={<ShieldCheck className="w-4 h-4 text-violet-500" />}>
+        <Takeaway>
+          The important distinction is not "cloud versus local" but "API versus consumer product".
+          They have different terms, and people routinely assume the wrong one.
+        </Takeaway>
+
         <ExpandableCardGrid columns={3} cards={[
           {
-            title: 'OK for Cloud AI',
-            subtitle: 'Generally safe',
-            content: 'Public information, code that\'s not proprietary, general questions, creative work not tied to sensitive identity.',
-            details: 'Most cloud AI providers (Anthropic, OpenAI) don\'t train on API requests by default. Consumer products (Claude.ai free tier) may use data differently — check the privacy policy. For most everyday developer tasks, cloud AI is fine.',
-            tags: ['Check ToS', 'API ≠ consumer product'],
-            color: 'green',
+            title: 'Fine for the cloud', subtitle: 'The common case', color: 'green',
+            content: 'Public information, non-proprietary code, general questions, ordinary creative work.',
+            points: [
+              'Major providers do not train on API traffic by default',
+              'This covers the large majority of everyday developer work',
+              'Read the current policy rather than trusting a blog post about it',
+            ],
+            tags: ['Check the terms'],
           },
           {
-            title: 'Use Local AI Instead',
-            subtitle: 'Keep on-device',
-            content: 'Medical records, financial data, legal documents, trade secrets, personal journals, unreleased product plans.',
-            details: 'If data leaving your machine would be a legal, compliance, or personal problem — use local AI. Ollama processes everything on your hardware. Nothing leaves. This is also true for corporate environments with data residency requirements.',
-            tags: ['Ollama', 'Zero data exposure'],
-            color: 'orange',
+            title: 'Keep it local', subtitle: 'When it must not leave', color: 'orange',
+            content: 'Medical, legal, financial records. Client data under confidentiality. Unreleased plans.',
+            points: [
+              'If a leak would be a legal or compliance problem, the answer is local',
+              'Ollama gives an absolute guarantee, not a policy promise',
+              'Data residency requirements usually rule out cloud entirely',
+            ],
+            tags: ['Ollama'],
           },
           {
-            title: 'Know the Difference',
-            subtitle: 'API vs consumer product',
-            content: 'Claude API and Claude.ai have different privacy policies. API data isn\'t used for training by default.',
-            details: 'When you use the Anthropic API with your API key, your data is not used to train models by default (see Anthropic\'s usage policies). When you use Claude.ai (the website) on a free consumer plan, data policies may differ. Always check the current privacy policy for the specific product you\'re using.',
-            tags: ['API vs UI', 'Read the policy'],
-            color: 'red',
+            title: 'API ≠ the chat product', subtitle: 'The distinction people miss', color: 'red',
+            content: 'The same company\'s API and consumer app can have materially different data terms.',
+            points: [
+              'API traffic under your own key is generally excluded from training by default',
+              'Consumer tiers may differ — check the settings and the policy',
+              '"I use Claude at work" does not tell you which terms apply',
+            ],
+            tags: ['Read the policy'],
           },
         ]} />
+
+        <Example label="A rule you can apply without thinking">
+          Would you be comfortable if this text appeared in a third party's logs? If you hesitate,
+          route it local. The hesitation is the signal.
+        </Example>
       </Subsection>
 
-      <Subsection title="Your Daily AI Workflow">
-        <Prose>
-          <p>The goal isn't to use AI for everything — it's to use it deliberately, saving your cognitive energy for the parts that require you specifically. Here's a practical daily workflow pattern.</p>
-        </Prose>
-        <TryThisCallout
-          title="Your Morning AI Briefing (n8n automation)"
-          prompt={`# Daily morning briefing workflow (n8n)
+      <Subsection title="A workflow that holds together" icon={<CalendarClock className="w-4 h-4 text-violet-500" />}>
+        <Takeaway>
+          The goal is not to use AI for everything. It is to spend your attention on the parts that
+          genuinely need you.
+        </Takeaway>
 
-# Trigger: Schedule at 8:00 AM every weekday
-
-# Node 1: HTTP Request
-# GET https://hacker-news.firebaseio.com/v0/topstories.json
-# + fetch top 5 article summaries
-
-# Node 2: Anthropic (Claude Haiku)
-# System: "You are a briefing assistant. Be concise."
-# User: "Summarize these tech headlines for a developer:
-#        [headlines]
-#        What's worth reading? What can I skip?"
-
-# Node 3: Your calendar API (Google Calendar MCP)
-# Fetch today's meetings
-
-# Node 4: Anthropic (Claude Haiku)
-# "Given these meetings: [meetings]
-#  What should I prepare for? Any conflicts?"
-
-# Node 5: Email/Telegram/Slack node
-# Send the combined briefing to yourself`}
-        />
         <ExpandableCardGrid columns={2} cards={[
           {
-            title: 'Development Work',
-            subtitle: 'Claude Code + Sonnet',
-            content: 'Primary coding assistant with filesystem access and MCP servers for web search and GitHub.',
-            details: 'Claude Code is your best development partner. Configure it with MCP servers: filesystem (for your project), web search (for docs), GitHub (for codebase context). Build a custom CLAUDE.md that explains your project architecture, coding conventions, and preferences once — then it knows your context in every session.',
-            tags: ['Claude Code', 'MCP servers'],
-            color: 'purple',
+            title: 'Development', subtitle: 'Claude Code + Sonnet', color: 'purple',
+            content: 'Filesystem and search MCP servers, plus a CLAUDE.md that explains your project once.',
+            points: [
+              'Write the architecture and conventions down once; every session inherits it',
+              'Add the GitHub MCP server when you review PRs regularly',
+              'Custom slash commands for anything you have explained twice',
+            ],
+            tags: ['MCP', 'CLAUDE.md'],
           },
           {
-            title: 'Research & Learning',
-            subtitle: 'Claude Sonnet with web search',
-            content: 'Deep research, learning new technologies, understanding papers or documentation.',
-            details: 'For research: use Claude with web search MCP enabled. For understanding code or papers: paste directly into Claude with a large context (200k tokens handles most documents). For building mental models of complex topics: chain-of-thought prompting ("explain this to me step by step, checking if I follow").',
-            tags: ['Web search MCP', 'Long context'],
-            color: 'blue',
+            title: 'Research and learning', subtitle: 'Sonnet with search', color: 'blue',
+            content: 'Long context handles most papers and docs whole — no RAG needed.',
+            points: [
+              'Paste the document rather than building a pipeline for one read',
+              'Ask it to check your understanding, not just to explain',
+              'Web search MCP for anything after the training cutoff',
+            ],
+            tags: ['Long context'],
           },
           {
-            title: 'Private / Sensitive Work',
-            subtitle: 'Ollama locally',
-            content: 'Anything involving personal data, company secrets, client information, or medical/legal docs.',
-            details: 'Route sensitive work to your local Ollama instance via Open WebUI. Set up a RAG collection for private documents. The quality is slightly lower than cloud Claude but the privacy guarantee is absolute — nothing leaves your machine.',
-            tags: ['Ollama', 'Open WebUI', 'Zero exposure'],
-            color: 'green',
+            title: 'Private work', subtitle: 'Ollama + Open WebUI', color: 'green',
+            content: 'A local knowledge collection over documents that cannot be uploaded.',
+            points: [
+              'Slightly lower quality, absolute privacy guarantee',
+              'Excellent at summarising and extraction, which is most of this work anyway',
+            ],
+            tags: ['Zero exposure'],
           },
           {
-            title: 'Automation & Pipelines',
-            subtitle: 'n8n + Claude Haiku',
-            content: 'Scheduled jobs, webhook handlers, data processing, notifications, bots.',
-            details: 'Self-hosted n8n handles the orchestration. Use Claude Haiku for most automated tasks (fast, cheap, good enough). Use Sonnet only when the task genuinely requires better reasoning. Set up error notifications so you know when automations break. Log AI outputs for auditing.',
-            tags: ['n8n', 'Scheduled', 'Low-cost model'],
-            color: 'orange',
+            title: 'Automation', subtitle: 'n8n or cron + Haiku', color: 'orange',
+            content: 'Scheduled jobs and webhooks, on the cheap tier by default.',
+            points: [
+              'Use the cheap model until a specific task visibly needs better',
+              'Alert yourself when an automation fails — silent breakage is the norm otherwise',
+              'Log the model output so you can audit what it decided and why',
+            ],
+            tags: ['Cheap tier'],
+          },
+        ]} />
+
+        <CodeBlock tabs={[
+          {
+            label: 'Morning briefing',
+            language: 'python',
+            note: 'Run from cron or Task Scheduler. Cheap model, bounded output, one delivery.',
+            code: `import anthropic
+
+client = anthropic.Anthropic()
+
+SYSTEM = """You write a morning brief for a developer.
+Five bullets maximum. No preamble, no sign-off.
+Lead with anything that changed materially overnight.
+If nothing is worth reporting, say exactly that."""
+
+
+def main() -> None:
+    context = "\\n\\n".join([
+        f"Headlines:\\n{fetch_headlines()}",
+        f"Calendar:\\n{fetch_today()}",
+        f"Open PRs:\\n{fetch_prs()}",
+    ])
+
+    msg = client.messages.create(
+        model="claude-haiku-4-5-20251001",   # cheap tier is plenty here
+        max_tokens=600,                       # bounded output, bounded cost
+        system=SYSTEM,
+        messages=[{"role": "user", "content": context}],
+    )
+
+    deliver(msg.content[0].text)   # email, Telegram, Slack, a file
+
+
+if __name__ == "__main__":
+    main()`,
           },
         ]} />
       </Subsection>
 
-      <Subsection title="Mini Recall">
+      <Subsection title="Common confusion" icon={<AlertTriangle className="w-4 h-4 text-amber-500" />}>
+        <CommonConfusionBlock confusions={[
+          {
+            itemA: 'Using the best model',
+            itemB: 'Building the best system',
+            explanation: 'Routing every task to your most capable model is the most expensive way to be roughly as effective. Classification on a frontier model costs 60× what it needs to and is not measurably better at it.',
+            fix: 'Route by task. Escalate only on observed failure.',
+          },
+          {
+            itemA: 'Prompt caching',
+            itemB: 'A general discount',
+            explanation: 'Caching only applies to a stable prefix reused across calls. If every request differs from the first token, there is nothing to cache and you pay a small write penalty for trying.',
+            fix: 'Cache the fixed part — system prompt, reference docs. Nothing else.',
+          },
+          {
+            itemA: 'Local means private',
+            itemB: 'Your setup is private',
+            explanation: 'A local model is private. A local model behind a tool that also calls a cloud API for embeddings, or logs prompts somewhere, is not. Check the whole path.',
+            fix: 'Privacy is a property of the pipeline, not of one component.',
+          },
+        ]} />
+      </Subsection>
+
+      <Subsection title="Check yourself" icon={<HelpCircle className="w-4 h-4 text-violet-500" />}>
         <MiniRecallBlock questions={[
-          { question: 'You\'re building a customer support classification system that processes 500,000 messages per day. Which model should you use?', answer: 'Claude Haiku (or another small, cheap model). At 500k messages/day, cost is critical. Haiku is 10-12x cheaper than Sonnet and handles classification tasks well. Only escalate to Sonnet for complex cases that Haiku misclassifies.' },
-          { question: 'A consultant wants to process client legal documents through an AI. What\'s the right approach?', answer: 'Use local AI (Ollama). Legal documents likely contain sensitive client information — sending them to cloud APIs may violate client confidentiality agreements and data residency requirements. Local processing with Ollama keeps everything on-device.' },
-          { question: 'What is prompt caching and when does it matter?', answer: 'Anthropic caches large, repeated prompt blocks (system prompts, reference docs) after the first call — subsequent uses cost ~90% less. Matters when you\'re sending the same large system prompt or document chunks with every message in a high-volume application.' },
+          {
+            question: '500,000 support messages a day need classifying. Which model?',
+            answer: 'The cheap tier — Haiku or GPT-4o-mini. At that volume cost dominates, and classification is well within a small model\'s ability. Escalate only the cases it flags as uncertain.',
+          },
+          {
+            question: 'A consultant wants to run client legal documents through AI. What do you tell them?',
+            answer: 'Local, via Ollama. Client confidentiality and data residency obligations usually make cloud processing a contractual problem regardless of the provider\'s training policy.',
+          },
+          {
+            question: 'What is prompt caching and when is it worth wiring up?',
+            answer: 'The provider stores a repeated prompt prefix and bills it at roughly a tenth of the rate. Worth it when a large system prompt or fixed document is reused across many calls — a RAG service, an agent with long standing instructions. Pointless when every request is unique.',
+          },
+          {
+            question: 'Your monthly bill tripled and nothing obvious changed. Where do you look first?',
+            answer: 'Which model is handling which calls. A default that silently moved up a tier, or a new code path routing routine work to the expensive model, explains this far more often than prompt length does.',
+          },
+          {
+            question: 'Someone says "we use AI locally so we are private". What should you check?',
+            answer: 'The whole path. Local generation plus a cloud embedding call, or a tool that logs prompts to a hosted service, is not private. Privacy is a property of the pipeline, not of the model.',
+          },
         ]} />
       </Subsection>
 
-      <CheatSheetPanel title="Your Complete AI Reference" items={[
-        { label: 'Daily coding', value: 'Claude Code (claude-sonnet-4-6) + filesystem + web search MCP' },
-        { label: 'Everyday tasks', value: 'Claude Haiku 4.5 — fast, cheap, good enough for simple work' },
-        { label: 'Hard problems', value: 'Claude Opus 4.7 or o3 — only when Sonnet isn\'t enough' },
-        { label: 'Local general', value: 'ollama pull llama3.2 (16GB RAM) or llama3.3:70b (64GB)' },
+      <CheatSheetPanel title="Your complete reference" items={[
+        { label: 'Daily coding', value: 'Claude Code + Sonnet + filesystem and search MCP' },
+        { label: 'High volume', value: 'Haiku or GPT-4o-mini — 10–12× cheaper, plenty for routine work' },
+        { label: 'Hard problems', value: 'Opus with extended thinking, or an o-series model. Only on repeated failure.' },
+        { label: 'Local general', value: 'ollama pull llama3.1:8b (16 GB) · llama3.3:70b (64 GB)' },
         { label: 'Local coding', value: 'ollama pull qwen2.5-coder:14b' },
-        { label: 'Local reasoning', value: 'ollama pull deepseek-r1:32b' },
-        { label: 'Automation', value: 'n8n (self-host: docker run n8nio/n8n) + Claude Haiku' },
-        { label: 'RAG (cloud)', value: 'Open WebUI Knowledge collections (built-in, no code)' },
-        { label: 'RAG (code)', value: 'chromadb + sentence-transformers + Anthropic/Ollama' },
-        { label: 'WhatsApp bot', value: 'Twilio + FastAPI webhook + any LLM API' },
-        { label: 'Prompt caching', value: 'cache_control in Anthropic SDK — 90% cost reduction on repeated context' },
-        { label: 'Privacy rule', value: 'Sensitive data → Ollama (local). Everything else → cloud API is fine.' },
-        { label: 'Anthropic API', value: 'console.anthropic.com — API keys, usage, prompt sandbox' },
-        { label: 'Ollama API', value: 'localhost:11434 — OpenAI-compatible, free, no key needed' },
+        { label: 'Local reasoning', value: 'ollama pull deepseek-r1:14b' },
+        { label: 'Automation', value: 'docker run n8nio/n8n, or cron plus a script. Cheap tier by default.' },
+        { label: 'RAG, no code', value: 'Open WebUI → Workspace → Knowledge' },
+        { label: 'RAG, custom', value: 'chromadb + sentence-transformers, fully local' },
+        { label: 'Prompt caching', value: 'cache_control on the stable prefix. ~10% of the input rate.' },
+        { label: 'Privacy rule', value: 'Would you mind it in someone\'s logs? Hesitation means local.' },
+        { label: 'Consoles', value: 'console.anthropic.com for keys and usage · localhost:11434 for Ollama' },
+        { label: 'The habit', value: 'Pick the model before you write the prompt.' },
       ]} />
     </SectionShell>
   )

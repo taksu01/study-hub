@@ -1,8 +1,11 @@
+import { Plug, Terminal, Cloud, Boxes, BookOpen, AlertTriangle, HelpCircle } from 'lucide-react'
 import {
-  SectionShell, SectionHeader, Subsection, Prose,
+  SectionShell, SectionHeader, Subsection, Takeaway, Points, Example,
   ExpandableCardGrid, CompareTable, TermsMemoryBlock,
-  CommonConfusionBlock, MiniRecallBlock, CheatSheetPanel, InfoCallout, TryThisCallout
+  CommonConfusionBlock, MiniRecallBlock, CheatSheetPanel, InfoCallout,
 } from '../components/ui'
+import { McpDiagram } from '../components/viz/McpDiagram'
+import { CodeBlock, Code } from '../components/CodeBlock'
 
 export default function Section05() {
   return (
@@ -10,212 +13,319 @@ export default function Section05() {
       <SectionHeader
         number={5}
         title="The Tooling Ecosystem"
-        subtitle="MCP, APIs, Skills, orchestration frameworks — the connective tissue between AI models and the real world."
+        subtitle="MCP, SDKs, skills and orchestration frameworks — the connective tissue between a model and the real world, and how to avoid reaching for the heaviest one first."
       />
 
-      <Subsection title="MCP — The USB Port for AI">
-        <Prose>
-          <p>Before MCP (Model Context Protocol), every AI tool had its own proprietary way of accessing external resources. Claude had one system. OpenAI had another. LangChain had its own. Building integrations meant writing custom code for each combination — the fragmentation tax.</p>
-          <p>MCP is an open standard — proposed by Anthropic in November 2024 and since adopted industry-wide by OpenAI, Google DeepMind, Microsoft Copilot, and thousands of community contributors. It works like USB: a universal connector. Any AI client that speaks MCP can use any MCP server, regardless of who built either side. An MCP server is a small program that exposes tools (functions the AI can call) and resources (data the AI can read) over a standard protocol.</p>
-        </Prose>
-        <InfoCallout type="info">
-          <strong>Why MCP matters to you:</strong> As a developer, MCP means you can give Claude (or any MCP-compatible AI) access to your filesystem, GitHub, databases, calendars, Slack, or any custom tool — without writing any AI-specific code. You just point the AI client at an MCP server and it uses that tool automatically. The same MCP server works with Claude, GPT-4o, and any future MCP client.
-        </InfoCallout>
-        <div className="mt-6" />
+      <Subsection title="MCP — the USB port for AI" icon={<Plug className="w-4 h-4 text-violet-500" />}>
+        <Takeaway>
+          Before MCP, every AI client had its own way to reach external tools, so every
+          client × tool pair needed custom code. MCP replaces that multiplication with addition.
+        </Takeaway>
+
+        <McpDiagram />
+
+        <Points items={[
+          <><strong>Open standard.</strong> Proposed by Anthropic in late 2024; now supported across OpenAI, Google, Microsoft and thousands of community servers.</>,
+          <><strong>You write no AI-specific code.</strong> Point a client at a server and the tools appear.</>,
+          <><strong>It runs locally.</strong> Usually a process on your machine talking over stdio, not a public web service.</>,
+          <><strong>Write once, use everywhere.</strong> The same server works with any MCP client, present or future.</>,
+        ]} />
+
         <ExpandableCardGrid columns={3} cards={[
           {
-            title: 'Filesystem MCP',
-            subtitle: 'Read/write local files',
-            content: 'Gives the AI access to read and write files on your machine within specified directories.',
-            details: 'Built into Claude Code. Lets Claude read your project files, write new files, and understand your codebase structure. You control which directories are accessible — never give root access. The most common MCP server for development workflows.',
-            tags: ['Built-in', 'Sandboxed paths'],
-            color: 'blue',
+            title: 'Filesystem', subtitle: 'Read and write local files', color: 'blue',
+            content: 'The one you will use most. Scoped to directories you name.',
+            points: ['Built into Claude Code', 'Never grant it your home directory root', 'Read access is cheap; write access deserves thought'],
+            tags: ['Built-in'],
           },
           {
-            title: 'Web Search MCP',
-            subtitle: 'Real-time internet access',
-            content: 'Lets the AI search the web for current information beyond its training cutoff.',
-            details: 'Popular options: Brave Search MCP, Tavily MCP. The model decides what to search, the MCP server calls the search API, results come back as structured text. Essential for: current documentation, recent events, prices, any information that changes over time.',
-            tags: ['Brave, Tavily', 'Real-time data'],
-            color: 'green',
+            title: 'Web search', subtitle: 'Past the training cutoff', color: 'green',
+            content: 'Brave or Tavily. The model picks the query; the server calls the search API.',
+            points: ['Essential for current docs, prices and events', 'Free API tiers exist for both', 'Returns snippets plus URLs so answers can cite'],
+            tags: ['Brave', 'Tavily'],
           },
           {
-            title: 'GitHub MCP',
-            subtitle: 'Repository access',
-            content: 'Read repositories, issues, pull requests, and code without leaving your AI chat.',
-            details: 'Can list repos, read file contents, search code, check issues and PRs. Useful for: having Claude review a specific PR, understanding an open-source library you\'re using, searching for examples across your organization\'s repos.',
-            tags: ['Repos', 'Issues', 'PRs'],
-            color: 'purple',
+            title: 'GitHub', subtitle: 'Repos, issues, PRs', color: 'purple',
+            content: 'Read code and metadata without leaving the chat.',
+            points: ['Review a specific PR by number', 'Search across your organisation\'s repos', 'Read a dependency\'s source instead of guessing at its behaviour'],
+            tags: ['Repos', 'PRs'],
           },
           {
-            title: 'Database MCP',
-            subtitle: 'Query your data',
-            content: 'Give the AI read (and optionally write) access to SQLite, PostgreSQL, or other databases.',
-            details: 'The AI can run SQL queries, understand your schema, and reason about your data. Useful for: exploratory data analysis, debugging data issues, generating reports. Give read-only access in production — never write access to live databases from an AI agent.',
-            tags: ['SQL queries', 'Schema understanding'],
-            color: 'orange',
+            title: 'Database', subtitle: 'Query your own data', color: 'orange',
+            content: 'SQLite, Postgres and friends. The model reads your schema and writes SQL.',
+            points: ['Excellent for exploratory analysis and debugging data', 'Read-only in production. Always', 'Point it at a replica if you have one'],
+            tags: ['SQL'],
           },
           {
-            title: 'Calendar / Email MCP',
-            subtitle: 'Personal productivity',
-            content: 'Connect Google Calendar, Gmail, or Outlook so the AI can read and manage your schedule.',
-            details: 'Lets an AI assistant actually check your availability, schedule meetings, draft emails, and summarize your inbox. This is how you start building a genuine personal assistant — the AI needs these connections to act on your behalf.',
-            tags: ['Google, Outlook', 'Personal assistant'],
-            color: 'teal',
+            title: 'Calendar / email', subtitle: 'Act on your behalf', color: 'teal',
+            content: 'Google or Outlook. Where a "personal assistant" stops being a demo.',
+            points: ['Check availability, draft replies, summarise an inbox', 'Gate anything that sends behind explicit approval'],
+            tags: ['Google', 'Outlook'],
           },
           {
-            title: 'Custom MCP Server',
-            subtitle: 'Build your own tool',
-            content: 'Any function can be an MCP server. Expose your own APIs, databases, or business logic.',
-            details: 'MCP servers are just programs (Node.js or Python) that implement the MCP protocol. You can wrap any API, any database, any service. Example: build an MCP server that reads from your trading platform\'s API — then Claude can query live portfolio data during analysis.',
-            tags: ['Node.js / Python', 'Any API'],
-            color: 'pink',
+            title: 'Your own', subtitle: 'Wrap any API', color: 'pink',
+            content: 'An MCP server is just a Node or Python program implementing the protocol.',
+            points: ['Wrap your internal API and every client gains it at once', 'Start from the official SDK template — the protocol details are handled for you'],
+            tags: ['Node', 'Python'],
           },
         ]} />
 
-        <TryThisCallout
-          title="Try: Add an MCP Server to Claude Code"
-          prompt={`# How to add Brave Search MCP to Claude Code
-
-1. Open your Claude Code settings file:
-   Windows: %APPDATA%\\Claude\\claude_desktop_config.json
-   Mac: ~/Library/Application Support/Claude/claude_desktop_config.json
-
-2. Add this to the "mcpServers" section:
-{
+        <CodeBlock tabs={[
+          {
+            label: 'Add a server',
+            language: 'json',
+            note: 'Windows: %APPDATA%\\Claude\\claude_desktop_config.json · macOS: ~/Library/Application Support/Claude/claude_desktop_config.json',
+            code: `{
   "mcpServers": {
     "brave-search": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-brave-search"],
       "env": {
-        "BRAVE_API_KEY": "your-api-key-here"
+        "BRAVE_API_KEY": "your-key-here"
       }
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "E:/Project/App"
+      ]
     }
   }
-}
+}`,
+          },
+          {
+            label: 'Build a server',
+            language: 'python',
+            note: 'pip install mcp — this is a complete, working server.',
+            code: `from mcp.server.fastmcp import FastMCP
 
-3. Restart Claude Code — it will now use Brave Search automatically
-   when it needs to look up current information.
+mcp = FastMCP("portfolio")
 
-Get your free Brave Search API key at: api.search.brave.com`}
-        />
-      </Subsection>
 
-      <Subsection title="Claude Code Skills — Custom Slash Commands">
-        <Prose>
-          <p>Skills in Claude Code are reusable slash commands that give Claude specialized capabilities for specific workflows. When you type <code>/review</code>, Claude doesn't just know what that means — there's an actual prompt template and logic behind it that gets loaded.</p>
-          <p>Built-in skills include: <code>/review</code> (code review), <code>/security-review</code>, <code>/init</code> (initialize CLAUDE.md). But you can create your own — write a markdown file with a system prompt and your slash command is ready.</p>
-        </Prose>
+@mcp.tool()
+def get_position(symbol: str) -> dict:
+    """Get the current position for a ticker.
+
+    The docstring becomes the tool description the model reads,
+    so write it for the model, not for a maintainer.
+    """
+    row = db.query("SELECT qty, avg_cost FROM positions WHERE symbol = ?", symbol)
+    if not row:
+        return {"symbol": symbol, "qty": 0}
+    return {"symbol": symbol, "qty": row.qty, "avg_cost": row.avg_cost}
+
+
+if __name__ == "__main__":
+    mcp.run()`,
+          },
+        ]} />
+
         <InfoCallout type="tip">
-          Custom skills are powerful for repetitive workflows: <code>/deploy</code> that runs your specific deployment script, <code>/debug</code> that follows your team's debugging process, <code>/pr</code> that drafts PRs in your organization's style. Skills are stored in <code>.claude/commands/</code> in your project.
+          Restart the client after editing the config — servers are launched at startup, so a running
+          Claude will not notice the new entry.
         </InfoCallout>
       </Subsection>
 
-      <Subsection title="The API Landscape">
-        <Prose>
-          <p>These are the main AI APIs you'll use as a developer. They all work similarly — send text, get text back — but differ in models, pricing, speed, and features.</p>
-        </Prose>
+      <Subsection title="Skills — reusable prompts, not new capabilities" icon={<Terminal className="w-4 h-4 text-violet-500" />}>
+        <Takeaway>
+          A skill is a saved prompt behind a slash command. It changes how the model
+          <em> behaves</em>. An MCP server changes what it can <em>reach</em>. Different axes entirely.
+        </Takeaway>
+
+        <Points items={[
+          <>Built-ins include <Code>/review</Code>, <Code>/security-review</Code> and <Code>/init</Code>.</>,
+          <>Your own live in <Code>.claude/commands/</Code> — a markdown file per command.</>,
+          <>Worth writing for anything you have explained more than twice: a deploy checklist, your team's debugging order, your PR house style.</>,
+        ]} />
+
+        <Example label="A skill is this small">
+          A file at <Code>.claude/commands/pr.md</Code> containing your PR conventions becomes
+          <Code>/pr</Code>. That is the entire mechanism.
+        </Example>
+      </Subsection>
+
+      <Subsection title="The API landscape" icon={<Cloud className="w-4 h-4 text-violet-500" />}>
         <CompareTable
-          headers={['Anthropic', 'OpenAI', 'Groq', 'Google', 'Ollama (Local)']}
+          headers={['Anthropic', 'OpenAI', 'Groq', 'Google', 'Ollama']}
           rows={[
-            { attribute: 'Best models', values: ['Claude Sonnet/Opus', 'GPT-4o, o1', 'Llama 3.3 70B', 'Gemini 1.5 Pro', 'Any open model'] },
-            { attribute: 'Speed', values: ['Fast', 'Fast', 'Extremely fast', 'Medium', 'Hardware-dependent'] },
-            { attribute: 'Context', values: ['200k tokens', '128k tokens', '128k tokens', '1M tokens', 'Model-dependent'] },
-            { attribute: 'Cost', values: ['Paid (per token)', 'Paid (per token)', 'Paid (but cheap)', 'Paid', 'Free (compute only)'] },
-            { attribute: 'Privacy', values: ['API agreement', 'API agreement', 'API agreement', 'API agreement', 'Fully local'] },
-            { attribute: 'Best for', values: ['Complex reasoning, coding', 'General versatility', 'Fast inference, prototyping', 'Very long documents', 'Local, private, free'] },
+            { attribute: 'Flagship', values: ['Claude Sonnet / Opus', 'GPT-4o, o-series', 'Llama 3.3 70B', 'Gemini 2.5 Pro', 'Any open model'] },
+            { attribute: 'Speed', values: ['Fast', 'Fast', 'Extremely fast', 'Medium', 'Your hardware'] },
+            { attribute: 'Context', values: ['200k', '128k', '128k', '1M', 'Model-dependent'] },
+            { attribute: 'Cost', values: ['Per token', 'Per token', 'Per token, cheap', 'Per token', 'Free — electricity only'] },
+            { attribute: 'Privacy', values: ['API terms', 'API terms', 'API terms', 'API terms', 'Nothing leaves the machine'] },
+            { attribute: 'Pick it for', values: ['Coding, long docs, agent work', 'Broadest ecosystem support', 'Latency-sensitive apps and prototyping', 'Inputs over 200k tokens', 'Privacy and zero marginal cost'] },
           ]}
         />
+
+        <InfoCallout type="tip">
+          <strong>They mostly speak the same shape.</strong> Groq and Ollama both expose an
+          OpenAI-compatible endpoint, so switching between them is usually a base URL and a model
+          name — not a rewrite.
+        </InfoCallout>
       </Subsection>
 
-      <Subsection title="Orchestration Frameworks">
-        <Prose>
-          <p>Orchestration frameworks help you build agents and pipelines without writing everything from scratch. They provide abstractions for tool management, memory, prompt chaining, and multi-agent coordination.</p>
-        </Prose>
+      <Subsection title="Orchestration frameworks" icon={<Boxes className="w-4 h-4 text-violet-500" />}>
+        <Takeaway>
+          Every framework is a bet that its abstractions match your problem. Start with the raw SDK.
+          Adopt a framework when you have felt the specific pain it removes — not before.
+        </Takeaway>
+
         <ExpandableCardGrid columns={2} cards={[
           {
-            title: 'n8n',
-            subtitle: 'Visual workflow automation',
-            content: 'Drag-and-drop automation builder with 400+ integrations and AI nodes. No-code to low-code.',
-            details: 'n8n lets you build AI-powered workflows visually: trigger (webhook, cron) → AI agent node → actions (send email, update database, post to Slack). You can self-host it for free. Great for: WhatsApp bots, content pipelines, data processing, any workflow that connects AI to other services. Add custom code nodes when you need it. Self-host: docker run -p 5678:5678 n8nio/n8n',
-            tags: ['Visual', 'Self-hostable', '400+ integrations'],
-            color: 'orange',
+            title: 'Official SDK', subtitle: 'The floor — start here', color: 'purple',
+            content: 'Direct API access. Tool definitions, streaming, multi-turn state, caching, vision.',
+            points: [
+              'pip install anthropic / npm install @anthropic-ai/sdk',
+              'You write the agent loop yourself — which is about twenty lines, as Section 4 showed',
+              'No abstraction between you and the API, so nothing surprising in the middle',
+              'Most projects never need more than this',
+            ],
+            tags: ['Lowest level', 'Official'],
           },
           {
-            title: 'LangChain',
-            subtitle: 'Python/JS LLM framework',
-            content: 'Code-first framework for building chains, agents, and RAG pipelines in Python or TypeScript.',
-            details: 'LangChain provides abstractions for: chains (prompt → LLM → output → next step), agents (LLM + tools + loops), retrievers (RAG), memory (conversation history), callbacks. More flexible than n8n but requires coding. Large community and many pre-built integrations. Use LangChain when you need custom logic that visual tools can\'t express.',
-            tags: ['Python / TypeScript', 'Production-grade'],
-            color: 'green',
+            title: 'n8n', subtitle: 'Visual workflow automation', color: 'orange',
+            content: 'Drag-and-drop with 400+ integrations and AI nodes. Self-hostable in one Docker command.',
+            points: [
+              'Trigger (webhook or cron) → AI node → actions (Slack, email, database)',
+              'Unbeatable when the hard part is connecting services, not the AI',
+              'Drop to a code node when the visual builder runs out',
+              'docker run -p 5678:5678 n8nio/n8n',
+            ],
+            tags: ['Low-code', 'Self-hostable'],
           },
           {
-            title: 'LlamaIndex',
-            subtitle: 'RAG and knowledge base specialist',
-            content: 'Python framework optimized for building retrieval systems and RAG pipelines over your own data.',
-            details: 'LlamaIndex excels at: ingesting documents (PDF, CSV, web, databases), chunking and embedding them, storing in vector databases, and building chat interfaces over your data. If your use case is "chat with my documents" or "AI that knows my business data," LlamaIndex is more focused than LangChain for this specific task.',
-            tags: ['RAG-focused', 'Document ingestion'],
-            color: 'blue',
+            title: 'LangChain', subtitle: 'Code-first agent framework', color: 'green',
+            content: 'Abstractions for chains, agents, retrievers and memory in Python or TypeScript.',
+            points: [
+              'Large ecosystem and many pre-built integrations',
+              'The abstractions cost you debuggability — stack traces get deep',
+              'Worth it when you are switching providers often or need its retriever ecosystem',
+            ],
+            tags: ['Python', 'TypeScript'],
           },
           {
-            title: 'Anthropic SDK',
-            subtitle: 'Direct API access — Python and TypeScript',
-            content: 'The official Anthropic SDK for calling Claude\'s API — tool use, streaming, multi-turn conversations, prompt caching.',
-            details: 'The Anthropic SDK (pip install anthropic / npm install @anthropic-ai/sdk) is the lowest-level, most direct way to use Claude. It handles: structured tool definitions (JSON schema), tool result handling, streaming responses, multi-turn conversation state, prompt caching, and vision inputs.\n\nThis is the base SDK — you manage the agent loop yourself if you need one.\n\nSeparate from this: Anthropic also offers a higher-level Agent SDK (anthropic-agent) specifically for multi-agent orchestration. If you\'re building a simple app or a single-agent tool, use the base SDK. If you need orchestrator + sub-agent coordination, look at the Agent SDK.',
-            tags: ['pip install anthropic', 'Official, lowest-level'],
-            color: 'purple',
+            title: 'LlamaIndex', subtitle: 'RAG specialist', color: 'blue',
+            content: 'Focused on ingesting documents, chunking, embedding and querying them.',
+            points: [
+              'Handles PDF, CSV, web and database ingestion out of the box',
+              'More opinionated and more focused than LangChain for "chat with my documents"',
+              'If RAG is the whole product, this is the shorter path',
+            ],
+            tags: ['RAG-focused'],
           },
         ]} />
+
+        <InfoCallout type="warning">
+          <strong>The framework trap.</strong> A framework that saves you 50 lines on day one can
+          cost you a week on day thirty, when you need behaviour it did not anticipate. The raw SDK
+          plus a loop you understand is a genuinely competitive choice for most projects.
+        </InfoCallout>
       </Subsection>
 
-      <Subsection title="Key Terms">
+      <Subsection title="Key terms" icon={<BookOpen className="w-4 h-4 text-violet-500" />}>
         <TermsMemoryBlock terms={[
-          { term: 'MCP', definition: 'Model Context Protocol — an open standard for connecting AI models to external tools and resources. Proposed by Anthropic in 2024, now adopted industry-wide by OpenAI, Google, Microsoft, and thousands of community servers. Like USB for AI.' },
-          { term: 'MCP Server', definition: 'A small program that exposes tools (functions) and resources (data) over the MCP protocol. The AI client connects to it automatically.' },
-          { term: 'MCP Client', definition: 'The AI application that connects to MCP servers. Claude Code and Claude Desktop are MCP clients.' },
-          { term: 'Function calling', definition: 'The technical mechanism by which an LLM requests a tool execution. The model outputs a structured JSON object specifying tool name and parameters.' },
-          { term: 'Webhook', definition: 'A URL endpoint that receives HTTP POST requests when an event happens. Used to trigger agent workflows from external systems (WhatsApp, GitHub, payment processors).' },
-          { term: 'SDK', definition: 'Software Development Kit — pre-built libraries that make it easier to use an API in a specific language. Anthropic has Python and TypeScript SDKs.' },
+          {
+            term: 'MCP',
+            short: 'Model Context Protocol — an open standard for connecting models to tools and data.',
+            example: 'USB, but for AI clients and tools',
+            detail: 'Anthropic proposed it in 2024; it is now supported across the major clients and thousands of community servers.',
+          },
+          {
+            term: 'MCP server',
+            short: 'A small program exposing tools and resources over the protocol.',
+            example: 'npx @modelcontextprotocol/server-filesystem',
+            detail: 'Usually a local process communicating over stdio — not a public web server.',
+          },
+          {
+            term: 'MCP client',
+            short: 'The AI application that connects to servers.',
+            example: 'Claude Desktop, Claude Code, Cursor',
+          },
+          {
+            term: 'Function calling',
+            short: 'The mechanism by which a model requests a tool — structured JSON naming the tool and its arguments.',
+            detail: 'Also called tool use. The model emits the request; your code performs it.',
+          },
+          {
+            term: 'Webhook',
+            short: 'A URL that receives an HTTP POST when something happens elsewhere.',
+            example: 'WhatsApp posts here on every inbound message',
+            detail: 'The standard way to trigger an agent from an external system. Section 7 builds one.',
+          },
+          {
+            term: 'SDK',
+            short: 'A language-specific library wrapping an API so you are not assembling HTTP by hand.',
+            example: 'pip install anthropic',
+          },
         ]} />
       </Subsection>
 
-      <Subsection title="Common Confusion">
+      <Subsection title="Common confusion" icon={<AlertTriangle className="w-4 h-4 text-amber-500" />}>
         <CommonConfusionBlock confusions={[
           {
-            itemA: 'MCP server',
+            itemA: 'An MCP server',
             itemB: 'A web server',
-            explanation: 'An MCP server is a local process (usually) that the AI client communicates with over stdio or SSE. It\'s not a public web server. It runs on your machine, alongside your Claude Desktop or Claude Code instance.',
+            explanation: 'It usually runs as a local child process talking over stdio to the client on the same machine. Nothing is listening on a public port and nothing needs deploying.',
+            fix: '"Server" here means "the side that provides tools", not "a machine on the internet".',
+          },
+          {
+            itemA: 'Skills',
+            itemB: 'MCP servers',
+            explanation: 'A skill is a saved prompt — it shapes behaviour. An MCP server is a set of tools — it grants reach. A skill cannot let Claude read your database; an MCP server cannot teach it your PR style.',
+            fix: 'Skills change how it acts. MCP changes what it can touch.',
           },
           {
             itemA: 'n8n',
             itemB: 'LangChain',
-            explanation: 'n8n is visual and low-code — great for automation workflows. LangChain is code-first and more flexible — better for complex custom agents. n8n for "connect these services with AI"; LangChain for "build a custom AI system."',
+            explanation: 'n8n is visual and shines at wiring services together. LangChain is code and shines at custom logic. They solve adjacent problems and are frequently used together.',
+            fix: '"Connect these services with AI" → n8n. "Build a custom AI system" → code.',
           },
           {
-            itemA: 'Claude Skills',
-            itemB: 'MCP servers',
-            explanation: 'Skills are prompt templates / slash commands that customize how Claude responds (its behavior). MCP servers give Claude new capabilities (tools to call external resources). Skills change what Claude knows how to do. MCP servers change what Claude can access.',
+            itemA: 'Needing a framework',
+            itemB: 'Needing an agent',
+            explanation: 'The agent loop is roughly twenty lines against the raw SDK. Wanting an agent is not by itself a reason to take on a framework\'s abstractions and upgrade treadmill.',
+            fix: 'Write the loop once yourself. You will understand every framework better afterwards.',
           },
         ]} />
       </Subsection>
 
-      <Subsection title="Mini Recall">
+      <Subsection title="Check yourself" icon={<HelpCircle className="w-4 h-4 text-violet-500" />}>
         <MiniRecallBlock questions={[
-          { question: 'What problem does MCP solve?', answer: 'The fragmentation problem — every AI tool had its own integration system. MCP is a universal standard so any AI client can use any MCP server, like USB standardized device connections.' },
-          { question: 'You want to build a workflow that posts an AI-generated summary to Slack every morning. Which tool is best?', answer: 'n8n — it has built-in Slack and scheduling nodes, plus AI nodes. You can build this visually in under an hour. No need for LangChain unless you need custom logic the visual builder can\'t express.' },
-          { question: 'What is function calling and who actually executes the function?', answer: 'Function calling is when an LLM outputs a structured JSON request specifying which tool to call and with what parameters. Your framework (SDK, LangChain, n8n) actually executes the function and returns the result to the model.' },
+          {
+            question: 'What problem does MCP actually solve?',
+            answer: 'Combinatorial explosion. Four clients and five tools used to mean twenty bespoke integrations; with a shared protocol it is nine implementations. Any compliant client works with any compliant server.',
+          },
+          {
+            question: 'You want an AI summary posted to Slack every morning. What is the shortest path?',
+            answer: 'n8n. It has scheduling, Slack and AI nodes built in — an hour of clicking. Reach for code only when the logic outgrows the visual builder.',
+          },
+          {
+            question: 'In function calling, who runs the function?',
+            answer: 'You do. The model emits structured JSON naming the tool and its arguments; your code, SDK or framework executes it and returns the result. The model never runs anything itself.',
+          },
+          {
+            question: 'You added an MCP server to the config and the model still says it cannot search. First check?',
+            answer: 'Restart the client — servers launch at startup. Then check the API key in the env block, and confirm the npx package name is right.',
+          },
+          {
+            question: 'When is adopting LangChain actually the right call?',
+            answer: 'When you are genuinely switching providers often, or you want its retriever and integration ecosystem rather than writing those yourself. Wanting an agent loop is not sufficient reason — that part is short.',
+          },
         ]} />
       </Subsection>
 
-      <CheatSheetPanel title="Section 5 Summary" items={[
-        { label: 'MCP', value: 'Open standard for AI ↔ tools. Like USB. Proposed by Anthropic, now industry-wide.' },
-        { label: 'MCP server', value: 'Small local program that exposes tools/resources to any MCP client.' },
-        { label: 'Claude Skills', value: 'Slash commands (/review, custom) = reusable prompt templates.' },
-        { label: 'Anthropic API', value: 'Best for complex reasoning, coding, long documents.' },
-        { label: 'Groq', value: 'Fastest inference — great for prototyping and latency-sensitive apps.' },
-        { label: 'n8n', value: 'Visual automation + AI. Best for workflows connecting many services.' },
-        { label: 'LangChain', value: 'Code-first agent/chain framework. Best for custom complex agents.' },
-        { label: 'LlamaIndex', value: 'Specialized for RAG and document Q&A pipelines.' },
+      <CheatSheetPanel title="Section 5 in nine lines" items={[
+        { label: 'MCP', value: 'Open standard for AI ↔ tools. Turns clients × tools into clients + tools.' },
+        { label: 'MCP server', value: 'A local program exposing tools. Config file, then restart the client.' },
+        { label: 'Skills', value: 'Saved prompts behind slash commands, in .claude/commands/.' },
+        { label: 'Skills vs MCP', value: 'Skills change behaviour. MCP changes reach.' },
+        { label: 'Anthropic', value: 'Coding, long documents, agent work.' },
+        { label: 'Groq', value: 'Fastest inference. Prototyping and latency-sensitive paths.' },
+        { label: 'Ollama', value: 'Free and private. OpenAI-compatible endpoint.' },
+        { label: 'n8n', value: 'Visual. Best when the hard part is connecting services.' },
+        { label: 'Start point', value: 'The raw SDK. Adopt a framework once you have felt its specific pain.' },
       ]} />
     </SectionShell>
   )

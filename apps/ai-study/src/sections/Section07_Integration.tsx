@@ -1,8 +1,11 @@
+import { Plug, Database, Webhook, Workflow, Braces, HelpCircle, AlertTriangle } from 'lucide-react'
 import {
-  SectionShell, SectionHeader, Subsection, Prose,
-  InteractiveFlowMap, ExpandableCardGrid, CompareTable,
-  MiniRecallBlock, CheatSheetPanel, InfoCallout, TryThisCallout, CauseEffectChain
+  SectionShell, SectionHeader, Subsection, Takeaway, Points, Example,
+  ExpandableCardGrid, CompareTable, MiniRecallBlock, CheatSheetPanel,
+  InfoCallout, CauseEffectChain, CommonConfusionBlock,
 } from '../components/ui'
+import { RagPipelineLab } from '../components/viz/RagPipelineLab'
+import { CodeBlock, Code } from '../components/CodeBlock'
 
 export default function Section07() {
   return (
@@ -10,263 +13,501 @@ export default function Section07() {
       <SectionHeader
         number={7}
         title="Integration Patterns"
-        subtitle="How to connect AI to your applications, data, and workflows. The building blocks of everything in Section 8."
+        subtitle="Four patterns cover nearly every AI feature you will ever build. Everything in Section 8 is these, combined."
       />
 
-      <Subsection title="The Four Core Integration Patterns">
-        <Prose>
-          <p>Every AI integration — no matter how complex — is built from a small set of patterns. Learn these and you can understand any AI application, then build your own.</p>
-        </Prose>
-        <div className="mt-4" />
-        <InteractiveFlowMap
-          nodes={[
-            { id: 'direct', label: 'Direct API Call', description: 'Your code calls the AI API with a prompt, gets a response. The simplest pattern. Good for: transformations, generation, classification, analysis of provided data.', color: 'blue' },
-            { id: 'rag', label: 'RAG', description: 'Retrieval Augmented Generation. Before calling the AI, you search your knowledge base for relevant documents and include them in the prompt. The AI answers from your data, not just its training.', color: 'purple' },
-            { id: 'webhook', label: 'Webhook/Event', description: 'An external event triggers an AI workflow. A message arrives on WhatsApp → webhook fires → AI processes it → responds. Event-driven architecture for reactive agents.', color: 'orange' },
-            { id: 'scheduled', label: 'Scheduled Job', description: 'AI runs on a cron schedule. Every morning at 8am → fetch market data → AI analyzes → send report. For monitoring, reporting, and autonomous agents.', color: 'green' },
-            { id: 'streaming', label: 'Streaming UX', description: 'Tokens arrive as they\'re generated, giving the user immediate feedback. Critical for chat interfaces. Uses server-sent events (SSE) or WebSockets between your server and the browser.', color: 'teal' },
-          ]}
-        />
+      <Subsection title="The four patterns" icon={<Plug className="w-4 h-4 text-violet-500" />}>
+        <Takeaway>
+          Before writing anything, decide which of these you actually need. Most projects that felt
+          complicated were the wrong pattern applied to a simple problem.
+        </Takeaway>
+
+        <div className="grid sm:grid-cols-2 gap-3 mb-6">
+          {[
+            {
+              n: 1, name: 'Direct call', colour: 'border-blue-200 bg-blue-50',
+              shape: 'Your code → API → response',
+              use: 'Transform, generate, classify, analyse something you already have.',
+            },
+            {
+              n: 2, name: 'RAG', colour: 'border-violet-200 bg-violet-50',
+              shape: 'Search your data → inject → API → response',
+              use: 'The model needs to answer from documents it was never trained on.',
+            },
+            {
+              n: 3, name: 'Webhook', colour: 'border-amber-200 bg-amber-50',
+              shape: 'External event → your server → API → action',
+              use: 'Something happens elsewhere and the AI should react. Bots, PR reviewers.',
+            },
+            {
+              n: 4, name: 'Scheduled', colour: 'border-emerald-200 bg-emerald-50',
+              shape: 'Cron → fetch → API → deliver',
+              use: 'Nothing triggers it but the clock. Reports, monitoring, digests.',
+            },
+          ].map(p => (
+            // min-w-0: without it the grid track sizes to the code line's
+            // intrinsic width and pushes the whole page sideways on mobile.
+            <div key={p.n} className={`rounded-xl border p-4 min-w-0 ${p.colour}`}>
+              <div className="flex items-baseline gap-2 mb-1.5">
+                <span className="text-xs font-bold text-slate-400">{p.n}</span>
+                <h4 className="text-sm font-semibold text-slate-800">{p.name}</h4>
+              </div>
+              <code className="block text-[13px] font-mono text-slate-600 bg-white/70 rounded-md px-2 py-1 mb-2 overflow-x-auto whitespace-nowrap">
+                {p.shape}
+              </code>
+              <p className="text-sm text-slate-600 leading-relaxed">{p.use}</p>
+            </div>
+          ))}
+        </div>
+
+        <InfoCallout type="tip">
+          <strong>Streaming is not a fifth pattern.</strong> It is a delivery detail you can add to
+          any of the four — tokens arrive as they are generated instead of all at once. Same total
+          time, dramatically better perceived speed. Use it for anything a human watches.
+        </InfoCallout>
       </Subsection>
 
-      <Subsection title="Pattern 1: Direct API Call">
-        <Prose>
-          <p>The foundation. You send a prompt to the AI API and receive a response. Most applications start here.</p>
-        </Prose>
-        <TryThisCallout
-          title="Python — Anthropic SDK (copy and run)"
-          prompt={`# pip install anthropic
+      <Subsection title="Pattern 1 — Direct call" icon={<Plug className="w-4 h-4 text-violet-500" />}>
+        <Takeaway>
+          The foundation, and further than most projects need to go. If your problem fits here, stop
+          here.
+        </Takeaway>
+
+        <CodeBlock tabs={[
+          {
+            label: 'Python',
+            language: 'python',
+            note: 'pip install anthropic — set ANTHROPIC_API_KEY in the environment, never in the source.',
+            code: `import os
 import anthropic
 
-client = anthropic.Anthropic(api_key="your-api-key")
+client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
 message = client.messages.create(
     model="claude-sonnet-4-6",
     max_tokens=1024,
-    system="You are a helpful assistant that responds concisely.",
+    system="You are a helpful assistant. Be concise.",
     messages=[
-        {"role": "user", "content": "Explain what RAG is in 2 sentences."}
-    ]
+        {"role": "user", "content": "Explain what RAG is in two sentences."}
+    ],
 )
 
-print(message.content[0].text)`}
-        />
-        <TryThisCallout
-          title="JavaScript — Anthropic SDK"
-          prompt={`// npm install @anthropic-ai/sdk
-import Anthropic from '@anthropic-ai/sdk';
+print(message.content[0].text)`,
+          },
+          {
+            label: 'JavaScript',
+            language: 'javascript',
+            note: 'npm install @anthropic-ai/sdk',
+            code: `import Anthropic from '@anthropic-ai/sdk'
 
-const client = new Anthropic({ apiKey: 'your-api-key' });
+const client = new Anthropic()  // reads ANTHROPIC_API_KEY from env
 
 const message = await client.messages.create({
   model: 'claude-sonnet-4-6',
   max_tokens: 1024,
-  system: 'You are a helpful assistant that responds concisely.',
+  system: 'You are a helpful assistant. Be concise.',
   messages: [
-    { role: 'user', content: 'Explain what RAG is in 2 sentences.' }
-  ]
-});
+    { role: 'user', content: 'Explain what RAG is in two sentences.' },
+  ],
+})
 
-console.log(message.content[0].text);`}
-        />
-        <TryThisCallout
-          title="Ollama (local model — same OpenAI format)"
-          prompt={`# pip install openai
-from openai import OpenAI
+console.log(message.content[0].text)`,
+          },
+          {
+            label: 'Streaming',
+            language: 'python',
+            note: 'Same call, incremental delivery. This is what makes a chat UI feel fast.',
+            code: `with client.messages.stream(
+    model="claude-sonnet-4-6",
+    max_tokens=1024,
+    messages=[{"role": "user", "content": "Explain RAG."}],
+) as stream:
+    for text in stream.text_stream:
+        print(text, end="", flush=True)
 
-# Point to local Ollama — same SDK, just different base_url
+# The final assembled message is still available afterwards.
+final = stream.get_final_message()`,
+          },
+          {
+            label: 'Local (Ollama)',
+            language: 'python',
+            note: 'Identical shape against a local model — only the base URL changes.',
+            code: `from openai import OpenAI
+
 client = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
 
 response = client.chat.completions.create(
-    model="llama3.2",
-    messages=[{"role": "user", "content": "Hello from local AI!"}]
+    model="llama3.1:8b",
+    messages=[{"role": "user", "content": "Hello from local AI."}],
 )
 
-print(response.choices[0].message.content)`}
-        />
-      </Subsection>
-
-      <Subsection title="Pattern 2: RAG — Chat With Your Own Data">
-        <Prose>
-          <p>RAG (Retrieval Augmented Generation) lets you build AI that knows about your specific data — your documents, your database, your notes — without fine-tuning a model.</p>
-          <p>The idea: before calling the AI, you search for relevant information and include it in the prompt. The AI then answers based on that retrieved context rather than just its training data. This eliminates hallucination for domain-specific questions and keeps answers up-to-date.</p>
-        </Prose>
-        <CauseEffectChain chain={[
-          { cause: 'Load your docs (PDF, CSV, text)', effect: 'Split into chunks (~500-1000 tokens each)' },
-          { cause: 'Embed each chunk', effect: 'Get a vector (list of numbers) per chunk' },
-          { cause: 'Store in vector DB', effect: 'ChromaDB / Qdrant / Pinecone stores vectors' },
-          { cause: 'User asks a question', effect: 'Embed the question → find similar chunks' },
-          { cause: 'Retrieve top-k chunks', effect: 'Build a prompt: "Context: [chunks]. Question: [user query]"' },
-          { cause: 'Call LLM with context', effect: 'Model answers from YOUR data, grounded in fact' },
+print(response.choices[0].message.content)`,
+          },
         ]} />
-        <TryThisCallout
-          title="Minimal RAG in Python (no framework)"
-          prompt={`# pip install anthropic chromadb sentence-transformers
 
-import chromadb
-from sentence_transformers import SentenceTransformer
-import anthropic
-
-# Setup
-embedder = SentenceTransformer('all-MiniLM-L6-v2')
-db = chromadb.Client()
-collection = db.create_collection("my_docs")
-
-# Ingest documents
-docs = [
-    "The company was founded in 2020 in Singapore.",
-    "Our product pricing is $29/month for the starter plan.",
-    "Support is available 24/7 via email at support@example.com.",
-]
-embeddings = embedder.encode(docs).tolist()
-collection.add(documents=docs, embeddings=embeddings, ids=["doc1","doc2","doc3"])
-
-# Query
-question = "What is the support email?"
-q_embedding = embedder.encode([question]).tolist()
-results = collection.query(query_embeddings=q_embedding, n_results=2)
-context = "\\n".join(results["documents"][0])
-
-# Ask AI with context
-client = anthropic.Anthropic()
-msg = client.messages.create(
-    model="claude-haiku-4-5-20251001",
-    max_tokens=512,
-    messages=[{
-        "role": "user",
-        "content": f"Context:\\n{context}\\n\\nQuestion: {question}"
-    }]
-)
-print(msg.content[0].text)`}
-        />
-      </Subsection>
-
-      <Subsection title="Pattern 3: Webhook-Triggered AI">
-        <Prose>
-          <p>Many real-world AI applications are event-driven: something happens in the outside world, it hits your webhook, your server runs AI processing, and an action is taken. WhatsApp bots, GitHub PR reviewers, email assistants — all webhooks.</p>
-        </Prose>
-        <CauseEffectChain chain={[
-          { cause: 'External event (message, payment, commit)', effect: 'Platform sends HTTP POST to your webhook URL' },
-          { cause: 'Your server receives the payload', effect: 'Extract relevant data from the JSON body' },
-          { cause: 'Call AI API with the data', effect: 'Process: classify, respond, analyze, transform' },
-          { cause: 'AI returns structured response', effect: 'Your server takes action (reply, update DB, send notification)' },
-        ]} />
-        <InfoCallout type="info">
-          <strong>For local development:</strong> Use ngrok or localtunnel to expose your localhost to the internet so webhook providers can reach your development server. <code>npx localtunnel --port 3000</code>
+        <InfoCallout type="warning">
+          <strong>Never commit an API key.</strong> Read it from the environment, keep it out of the
+          browser entirely, and put the call behind your own server — a key shipped to a client is a
+          key that gets scraped and spent.
         </InfoCallout>
       </Subsection>
 
-      <Subsection title="Pattern 4: n8n — Visual AI Automation">
-        <Prose>
-          <p>For workflows that connect multiple services, n8n lets you build AI pipelines visually. You drag nodes onto a canvas, connect them, and your workflow runs. No complex coding needed for the plumbing — just configure the nodes.</p>
-        </Prose>
-        <ExpandableCardGrid columns={2} cards={[
+      <Subsection title="Pattern 2 — RAG" icon={<Database className="w-4 h-4 text-violet-500" />}>
+        <Takeaway>
+          RAG lets a model answer from your documents without any training. Search first, paste the
+          hits into the prompt, then ask. That is the entire idea — the rest is engineering.
+        </Takeaway>
+
+        <RagPipelineLab />
+
+        <CodeBlock tabs={[
           {
-            title: 'n8n AI Agent Node',
-            subtitle: 'The core AI building block',
-            content: 'A configurable LLM node with tool support. Point it at Claude, GPT-4, or Ollama.',
-            details: 'The AI Agent node in n8n handles the full agent loop internally. You configure: which model to use, the system prompt, which tools are available (other n8n nodes), and memory settings. You can chain multiple agents or use tools like HTTP Request, database queries, and any n8n integration as agent tools.',
-            tags: ['LangChain under hood', 'Visual config'],
-            color: 'orange',
+            label: 'Minimal RAG',
+            language: 'python',
+            note: 'pip install anthropic chromadb sentence-transformers — no framework, ~30 lines.',
+            code: `import chromadb
+from sentence_transformers import SentenceTransformer
+import anthropic
+
+embedder = SentenceTransformer("all-MiniLM-L6-v2")
+db = chromadb.Client()
+collection = db.create_collection("handbook")
+
+# ── Index time: runs once ──────────────────────────────
+docs = [
+    "Employees accrue 1.5 days of leave per month.",
+    "Unused leave carries over up to 10 days.",
+    "Leave requests need two weeks notice.",
+]
+collection.add(
+    documents=docs,
+    embeddings=embedder.encode(docs).tolist(),
+    ids=[f"doc{i}" for i in range(len(docs))],
+)
+
+# ── Query time: runs per question ──────────────────────
+question = "How much leave do I get?"
+hits = collection.query(
+    query_embeddings=embedder.encode([question]).tolist(),
+    n_results=3,
+)
+context = "\\n".join(hits["documents"][0])
+
+client = anthropic.Anthropic()
+msg = client.messages.create(
+    model="claude-sonnet-4-6",
+    max_tokens=512,
+    # Without this instruction the model falls back on training data.
+    system=(
+        "Answer only from the context provided. "
+        "If the answer is not in the context, say you do not know."
+    ),
+    messages=[{
+        "role": "user",
+        "content": f"Context:\\n{context}\\n\\nQuestion: {question}",
+    }],
+)
+print(msg.content[0].text)`,
           },
           {
-            title: 'Common n8n Workflow Patterns',
-            subtitle: 'What people actually build',
-            content: 'Webhook → AI classify/respond → Action. Schedule → fetch data → AI analyze → notify.',
-            details: 'Real examples:\n• Receive WhatsApp message → AI classify intent → route to appropriate response\n• Every morning: fetch news → AI summarize → post to Slack\n• GitHub PR opened → AI review code → comment on PR\n• Customer email → AI draft reply → send to support agent for approval\n• Monitor RSS feeds → AI extract insights → save to Notion',
-            tags: ['Webhook', 'Scheduled', 'Routing'],
-            color: 'green',
+            label: 'Chunking',
+            language: 'python',
+            note: 'Where most RAG projects actually fail. Overlap keeps sentences from being cut in half.',
+            code: `def chunk(text: str, size: int = 600, overlap: int = 80) -> list[str]:
+    """Split on paragraph boundaries, packing up to ~size characters.
+
+    Overlap carries the tail of one chunk into the head of the next so a
+    fact that straddles a boundary survives in at least one chunk intact.
+    """
+    paragraphs = [p.strip() for p in text.split("\\n\\n") if p.strip()]
+    chunks: list[str] = []
+    current = ""
+
+    for para in paragraphs:
+        if len(current) + len(para) <= size:
+            current += ("\\n\\n" if current else "") + para
+        else:
+            if current:
+                chunks.append(current)
+            # Carry the overlap forward, not the whole previous chunk.
+            current = current[-overlap:] + "\\n\\n" + para if current else para
+
+    if current:
+        chunks.append(current)
+    return chunks`,
           },
         ]} />
-        <TryThisCallout
-          title="n8n: Install and Access Locally"
-          prompt={`# Self-host with Docker (free forever)
-docker run -it --rm --name n8n -p 5678:5678 \\
+
+        <Points items={[
+          <><strong>Same embedding model both times.</strong> Index and query must match, or the distances mean nothing and search silently returns junk.</>,
+          <><strong>Store the text next to the vector.</strong> A vector cannot be turned back into words.</>,
+          <><strong>Instruct the model to abstain.</strong> "Say you do not know if it is not in the context" is the line that stops confident invention.</>,
+          <><strong>Return citations.</strong> Include chunk IDs so a user can check the source — this is most of RAG's practical value.</>,
+        ]} />
+
+        <Example label="When RAG is the wrong tool">
+          If the whole corpus fits in the context window — a 40-page handbook is ~30k tokens — just
+          paste it in. RAG is what you do when the data is too big for that, not a rite of passage.
+        </Example>
+      </Subsection>
+
+      <Subsection title="Pattern 3 — Webhook" icon={<Webhook className="w-4 h-4 text-violet-500" />}>
+        <Takeaway>
+          Something happens in the outside world, it POSTs to your URL, you run the AI, you act.
+          Every messaging bot and PR reviewer is this shape.
+        </Takeaway>
+
+        <CauseEffectChain chain={[
+          { cause: 'Event happens (message, commit, payment)', effect: 'Platform POSTs JSON to your webhook URL' },
+          { cause: 'Your server receives it', effect: 'Verify the signature, extract the payload, acknowledge fast' },
+          { cause: 'Process with the AI', effect: 'Classify, draft, analyse — in a background task, not inline' },
+          { cause: 'AI returns a result', effect: 'Reply, write to the database, notify a human' },
+        ]} />
+
+        <CodeBlock tabs={[
+          {
+            label: 'FastAPI webhook',
+            language: 'python',
+            note: 'The 200 goes back immediately; the AI call runs after. Most platforms time out in 5–10s.',
+            code: `from fastapi import BackgroundTasks, FastAPI, Request
+import anthropic
+
+app = FastAPI()
+client = anthropic.Anthropic()
+
+
+@app.post("/webhook")
+async def receive(req: Request, background: BackgroundTasks):
+    payload = await req.json()
+
+    text = payload.get("message", {}).get("text", "")
+    sender = payload.get("message", {}).get("from", "")
+
+    # Acknowledge now, think later — the platform will retry if we stall.
+    background.add_task(handle, sender, text)
+    return {"ok": True}
+
+
+def handle(sender: str, text: str) -> None:
+    msg = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=512,
+        system="You are a concise support assistant. Two sentences maximum.",
+        messages=[{"role": "user", "content": text}],
+    )
+    send_reply(sender, msg.content[0].text)`,
+          },
+        ]} />
+
+        <InfoCallout type="info">
+          <strong>Testing locally:</strong> webhook providers cannot reach <Code>localhost</Code>.
+          Tunnel it — <Code>npx localtunnel --port 8000</Code> or <Code>ngrok http 8000</Code> — and
+          register the public URL it prints.
+        </InfoCallout>
+      </Subsection>
+
+      <Subsection title="Pattern 4 — Scheduled, and n8n" icon={<Workflow className="w-4 h-4 text-violet-500" />}>
+        <Takeaway>
+          When the only trigger is the clock, the plumbing is the whole job — and a visual tool beats
+          code for plumbing.
+        </Takeaway>
+
+        <ExpandableCardGrid columns={2} cards={[
+          {
+            title: 'n8n AI Agent node', subtitle: 'The agent loop, configured not coded', color: 'orange',
+            content: 'Pick a model, write the system prompt, tick which other nodes count as tools.',
+            points: [
+              'Works with Claude, OpenAI, or Ollama',
+              'Any n8n integration can be exposed to the agent as a tool',
+              'Memory and iteration limits are settings, not code',
+            ],
+            tags: ['Visual config'],
+          },
+          {
+            title: 'What people actually build', subtitle: 'The five workflows that recur', color: 'green',
+            content: 'Almost every real n8n AI workflow is a variation of these.',
+            points: [
+              'Inbound message → classify intent → route to a reply',
+              'Every morning → fetch news → summarise → post to Slack',
+              'PR opened → review the diff → comment',
+              'Customer email → draft a reply → queue for human approval',
+              'RSS feeds → extract insights → save to Notion',
+            ],
+            tags: ['Webhook', 'Cron'],
+          },
+        ]} />
+
+        <CodeBlock tabs={[
+          {
+            label: 'Self-host n8n',
+            language: 'bash',
+            note: 'Free forever when self-hosted. Data stays on your machine.',
+            code: `docker run -it --rm --name n8n \\
+  -p 5678:5678 \\
   -v ~/.n8n:/home/node/.n8n \\
   n8nio/n8n
 
-# Access at: http://localhost:5678
-# Sign up with a local account (no cloud account needed)
-
-# To connect n8n to Claude:
-# 1. Add a Credential: Credentials → New → Anthropic API
-# 2. Paste your Anthropic API key
-# 3. In any AI node, select "Claude" and your credential
-# 4. For Ollama: use "OpenAI" credential type with base URL = http://host.docker.internal:11434/v1`}
-        />
-      </Subsection>
-
-      <Subsection title="Structured Output — Making AI API-Friendly">
-        <Prose>
-          <p>When AI output goes into code (parsed, stored, acted upon), you need it in a predictable format. The two approaches: prompt-based (ask for JSON) or schema-based (use tool calling / function calling to enforce a schema).</p>
-        </Prose>
-        <CompareTable
-          headers={['Prompt-based JSON', 'Tool/Function Calling']}
-          rows={[
-            { attribute: 'How it works', values: ['"Reply only in JSON: {key: value}"', 'Define a JSON schema. Model MUST use it.'] },
-            { attribute: 'Reliability', values: ['~90% — model can still add prose', '99%+ — schema is enforced'] },
-            { attribute: 'Ease', values: ['Simple — just a prompt instruction', 'Requires schema definition'] },
-            { attribute: 'Best for', values: ['Prototyping, simple extractions', 'Production systems, complex schemas'] },
-            { attribute: 'Claude API', values: ['Any model', 'Use tools parameter with JSON schema'] },
-          ]}
-        />
-        <TryThisCallout
-          title="Structured Output with Claude Tool Use"
-          prompt={`import anthropic
-import json
+# Open http://localhost:5678 and create a local account.
+#
+# To use Claude:  Credentials → New → Anthropic API → paste your key
+# To use Ollama:  use the OpenAI credential type with
+#                 base URL http://host.docker.internal:11434/v1`,
+          },
+          {
+            label: 'Or just cron it',
+            language: 'python',
+            note: 'A scheduled job does not need a platform. Sometimes this is the whole answer.',
+            code: `# daily_brief.py — run from cron or Task Scheduler
+import anthropic
 
 client = anthropic.Anthropic()
 
-# Define the schema you want
+
+def main() -> None:
+    headlines = fetch_headlines()          # your own function
+    prices = fetch_portfolio()             # your own function
+
+    msg = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=800,
+        system=(
+            "You write a morning brief. Five bullets, no preamble. "
+            "Lead with anything that changed materially overnight."
+        ),
+        messages=[{
+            "role": "user",
+            "content": f"Headlines:\\n{headlines}\\n\\nPortfolio:\\n{prices}",
+        }],
+    )
+    deliver(msg.content[0].text)           # email, Slack, a file
+
+
+if __name__ == "__main__":
+    main()`,
+          },
+        ]} />
+      </Subsection>
+
+      <Subsection title="Structured output — making the response parseable" icon={<Braces className="w-4 h-4 text-violet-500" />}>
+        <Takeaway>
+          The moment code consumes the output, "usually valid JSON" is a bug waiting for production.
+          Tool use turns a request into a guarantee.
+        </Takeaway>
+
+        <CompareTable
+          headers={['Asking for JSON', 'Tool / function calling']}
+          rows={[
+            { attribute: 'How', values: ['"Reply only in JSON: { … }"', 'Define a JSON schema; the model must fill it'] },
+            { attribute: 'Reliability', values: ['Good, not guaranteed — prose and code fences leak in', 'Effectively guaranteed — the shape is enforced'] },
+            { attribute: 'Effort', values: ['One line of prompt', 'A schema definition'] },
+            { attribute: 'Use for', values: ['Prototypes and one-off extraction', 'Anything running unattended'] },
+          ]}
+        />
+
+        <CodeBlock tabs={[
+          {
+            label: 'Enforced schema',
+            language: 'python',
+            note: 'tool_choice forces this exact tool, so the reply is always the schema — never prose.',
+            code: `import json
+import anthropic
+
+client = anthropic.Anthropic()
+
 tools = [{
-    "name": "extract_product_info",
-    "description": "Extract product information from text",
+    "name": "extract_product",
+    "description": "Extract structured product information from text.",
     "input_schema": {
         "type": "object",
         "properties": {
             "product_name": {"type": "string"},
             "price": {"type": "number"},
             "in_stock": {"type": "boolean"},
-            "features": {"type": "array", "items": {"type": "string"}}
+            "features": {"type": "array", "items": {"type": "string"}},
         },
-        "required": ["product_name", "price", "in_stock"]
-    }
+        "required": ["product_name", "price", "in_stock"],
+    },
 }]
 
 message = client.messages.create(
-    model="claude-haiku-4-5-20251001",
+    model="claude-sonnet-4-6",
     max_tokens=1024,
     tools=tools,
-    tool_choice={"type": "tool", "name": "extract_product_info"},
+    # Without this the model may answer in prose instead of calling the tool.
+    tool_choice={"type": "tool", "name": "extract_product"},
     messages=[{
         "role": "user",
-        "content": "Product: ProCam X5. Price: $299.99. Currently available. Features: 4K video, waterproof, 12hr battery."
-    }]
+        "content": (
+            "Product: ProCam X5. Price: $299.99. Currently available. "
+            "Features: 4K video, waterproof, 12hr battery."
+        ),
+    }],
 )
 
-# Get the structured output
-result = message.content[0].input
-print(json.dumps(result, indent=2))`}
-        />
-      </Subsection>
-
-      <Subsection title="Mini Recall">
-        <MiniRecallBlock questions={[
-          { question: 'What is RAG and when should you use it instead of just asking the AI?', answer: 'RAG = Retrieval Augmented Generation. Embed documents, search for relevant chunks at query time, include them in the prompt. Use RAG when you need the AI to answer from your specific data (documents, database) rather than just its training. It eliminates hallucination for domain-specific facts.' },
-          { question: 'You\'re building a system where an LLM\'s response will be parsed as JSON by your code. What\'s the most reliable approach?', answer: 'Use tool calling / function calling with a JSON schema. This forces the model to output valid JSON matching your schema — more reliable than just asking for JSON in the prompt.' },
-          { question: 'You want to build a bot that responds to WhatsApp messages using AI. What integration pattern is this?', answer: 'Webhook pattern. WhatsApp (via Twilio or similar) sends an HTTP POST to your webhook URL when a message arrives. Your server processes it with an AI API and calls the messaging API to reply.' },
+result = message.content[0].input   # already a dict, no parsing needed
+print(json.dumps(result, indent=2))`,
+          },
         ]} />
       </Subsection>
 
-      <CheatSheetPanel title="Section 7 Summary" items={[
-        { label: 'Direct API', value: 'Simplest pattern. Prompt in → response out. Use Anthropic or OpenAI SDK.' },
-        { label: 'RAG', value: 'Embed docs → vector DB → retrieve at query time → include in prompt.' },
-        { label: 'Webhook', value: 'External event → HTTP POST → AI process → action. (WhatsApp, GitHub, etc.)' },
-        { label: 'Scheduled job', value: 'Cron triggers AI. Monitoring, reports, autonomous agents.' },
-        { label: 'n8n', value: 'Visual automation. Self-host free. 400+ integrations + AI nodes.' },
-        { label: 'Tool calling', value: 'Enforces JSON schema output. More reliable than prompt-based JSON.' },
-        { label: 'Ollama local', value: 'Use openai SDK, set base_url="http://localhost:11434/v1"' },
-        { label: 'Vector DB options', value: 'ChromaDB (local, simple), Qdrant (production), Pinecone (cloud)' },
+      <Subsection title="Common confusion" icon={<AlertTriangle className="w-4 h-4 text-amber-500" />}>
+        <CommonConfusionBlock confusions={[
+          {
+            itemA: 'Needing RAG',
+            itemB: 'Having a lot of text',
+            explanation: 'If the corpus fits in the context window, pasting it in is simpler, more accurate and easier to debug. RAG exists for data that will not fit — not as a badge of seriousness.',
+            fix: 'Count the tokens first. Under ~100k? Just paste it.',
+          },
+          {
+            itemA: 'A slow webhook handler',
+            itemB: 'An acceptable webhook handler',
+            explanation: 'Most platforms time out in 5–10 seconds and then retry, so a slow handler produces duplicate processing rather than a late reply.',
+            fix: 'Return 200 immediately, do the AI work in the background.',
+          },
+          {
+            itemA: 'Prompting for JSON',
+            itemB: 'Guaranteeing JSON',
+            explanation: 'Asking works most of the time. Most of the time is not a contract — you will get a markdown fence or a polite sentence eventually, at 3am.',
+            fix: 'Tool use with tool_choice for anything unattended.',
+          },
+        ]} />
+      </Subsection>
+
+      <Subsection title="Check yourself" icon={<HelpCircle className="w-4 h-4 text-violet-500" />}>
+        <MiniRecallBlock questions={[
+          {
+            question: 'What is RAG, and when should you use it over just asking?',
+            answer: 'Search your documents for relevant chunks, paste them into the prompt, then ask. Use it when the model must answer from data it was never trained on and that data is too large to paste wholesale. It also lets you show citations.',
+          },
+          {
+            question: 'Your code parses the model\'s JSON response and breaks intermittently. Fix?',
+            answer: 'Switch from asking for JSON to tool use with an input_schema and tool_choice pinned to that tool. The shape is then enforced rather than requested.',
+          },
+          {
+            question: 'A WhatsApp bot that answers with AI — which pattern, and what is the trap?',
+            answer: 'Webhook. The trap is doing the AI call inline: the platform times out after a few seconds and retries, so you process the same message twice. Acknowledge immediately and handle it in the background.',
+          },
+          {
+            question: 'Your RAG system confidently answers questions the documents do not cover. Why?',
+            answer: 'No abstention instruction. Without an explicit "if it is not in the context, say you do not know", the model falls back on training data. Add that line, and consider a relevance threshold on retrieval.',
+          },
+          {
+            question: 'You indexed with one embedding model and queried with another. What happens?',
+            answer: 'Silently wrong results. The vectors live in different spaces, so "nearest" is meaningless. Nothing errors — you just get irrelevant chunks and confident nonsense.',
+          },
+        ]} />
+      </Subsection>
+
+      <CheatSheetPanel title="Section 7 in nine lines" items={[
+        { label: 'Direct call', value: 'Prompt in, response out. Where most projects should stop.' },
+        { label: 'RAG', value: 'Chunk → embed → store → retrieve → inject → ask.' },
+        { label: 'RAG rule 1', value: 'Same embedding model for indexing and querying. Always.' },
+        { label: 'RAG rule 2', value: 'Tell it to say "I do not know". Otherwise it invents.' },
+        { label: 'Webhook', value: 'Return 200 fast, process in the background, verify signatures.' },
+        { label: 'Scheduled', value: 'Cron plus a script. n8n if the plumbing is the hard part.' },
+        { label: 'Streaming', value: 'Not a pattern — a delivery mode. Use it wherever a human waits.' },
+        { label: 'Structured output', value: 'Tool use with tool_choice. Enforced beats requested.' },
+        { label: 'Vector stores', value: 'Chroma to learn · Qdrant or pgvector for production · Pinecone hosted.' },
       ]} />
     </SectionShell>
   )

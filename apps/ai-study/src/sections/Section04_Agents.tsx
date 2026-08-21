@@ -1,8 +1,11 @@
+import { Bot, Wrench, Boxes, ShieldAlert, BookOpen, AlertTriangle, HelpCircle } from 'lucide-react'
 import {
-  SectionShell, SectionHeader, Subsection, Prose,
-  InteractiveFlowMap, ExpandableCardGrid, TermsMemoryBlock,
-  CommonConfusionBlock, MiniRecallBlock, CheatSheetPanel, InfoCallout, TryThisCallout
+  SectionShell, SectionHeader, Subsection, Takeaway, Points, Example,
+  ExpandableCardGrid, TermsMemoryBlock, CommonConfusionBlock,
+  MiniRecallBlock, CheatSheetPanel, InfoCallout, TryThisCallout, CompareTable,
 } from '../components/ui'
+import { AgentLoopLab } from '../components/viz/AgentLoopLab'
+import { CodeBlock } from '../components/CodeBlock'
 
 export default function Section04() {
   return (
@@ -10,219 +13,372 @@ export default function Section04() {
       <SectionHeader
         number={4}
         title="The Agent Paradigm"
-        subtitle="The biggest shift in AI: from models that respond, to agents that act. Here's how it works."
+        subtitle="The shift from models that answer to systems that act. It is a smaller change than it sounds — and a much bigger one in consequence."
       />
 
-      <Subsection title="What Makes Something an Agent?">
+      <Subsection title="An agent is four things, and the model is only one of them" icon={<Bot className="w-4 h-4 text-violet-500" />}>
+        <Takeaway>
+          The LLM is not the agent. It is the reasoning component inside one. Confusing the engine
+          with the car is the single most common mistake in this space.
+        </Takeaway>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+          {[
+            { part: 'LLM', role: 'Decides what to do next', colour: 'border-violet-200 bg-violet-50 text-violet-800' },
+            { part: 'Tools', role: 'The hands that actually do it', colour: 'border-blue-200 bg-blue-50 text-blue-800' },
+            { part: 'Control loop', role: 'Your code, driving the iterations', colour: 'border-teal-200 bg-teal-50 text-teal-800' },
+            { part: 'Memory', role: 'State carried between steps', colour: 'border-amber-200 bg-amber-50 text-amber-800' },
+          ].map(p => (
+            <div key={p.part} className={`rounded-xl border p-3.5 ${p.colour}`}>
+              <h4 className="text-sm font-semibold">{p.part}</h4>
+              <p className="text-xs mt-1 opacity-80 leading-relaxed">{p.role}</p>
+            </div>
+          ))}
+        </div>
+
+        <AgentLoopLab />
+
         <InfoCallout type="warning">
-          <strong>Precision matters here — the LLM is not the agent.</strong> The LLM is the <em>reasoning component inside</em> an agent. An agent is the full system: LLM (decides what to do) + tools (hands that act) + control loop (the code that drives iterations) + memory (state between steps). Confusing the engine with the car is the most common misconception in this space. When you build an agent, you're writing the car — the LLM is just the engine under the hood.
+          <strong>The loop is what makes agents powerful and what makes them risky.</strong> An agent
+          can take dozens of actions with nobody watching. That is how Claude Code writes a whole
+          feature — read, write, run tests, fix, repeat. It is also why the interesting engineering
+          question is what the agent <em>cannot</em> do.
         </InfoCallout>
-        <Prose>
-          <p>A chatbot answers questions. An agent takes actions. That single distinction changes everything about what AI can do.</p>
-          <p>An AI agent is a system where an LLM drives a control loop: observe a situation → decide what action to take → execute a tool → observe the result → decide what to do next — repeating until the task is complete or human input is needed. The LLM provides the reasoning; your code (or a framework) provides the loop, the tool execution, and the state management.</p>
-          <p>Click each step in the agent loop below to understand what happens at that point.</p>
-        </Prose>
-        <div className="mt-4" />
-        <InteractiveFlowMap
-          vertical={true}
-          nodes={[
+      </Subsection>
+
+      <Subsection title="Tools — the agent's hands" icon={<Wrench className="w-4 h-4 text-violet-500" />}>
+        <Takeaway>
+          A tool is just a function you described well enough that the model knows when to reach for
+          it. You write the function and the description; the model chooses the moment.
+        </Takeaway>
+
+        <CodeBlock tabs={[
+          {
+            label: 'Defining a tool',
+            language: 'python',
+            note: 'The description is not documentation — it is the prompt that decides whether this tool gets used.',
+            code: `tools = [
+    {
+        "name": "get_price",
+        # Written for the model, not for a human reader.
+        "description": (
+            "Get the current spot price of a crypto asset in USD. "
+            "Use this whenever the user asks about a current or live price. "
+            "Do not use it for historical prices."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "symbol": {
+                    "type": "string",
+                    "description": "Ticker, e.g. BTC or ETH",
+                }
+            },
+            "required": ["symbol"],
+        },
+    }
+]
+
+msg = client.messages.create(
+    model="claude-sonnet-4-6",
+    max_tokens=1024,
+    tools=tools,
+    messages=[{"role": "user", "content": "What is BTC trading at?"}],
+)`,
+          },
+          {
+            label: 'The loop',
+            language: 'python',
+            note: 'This is the entire agent. Everything else is more tools and better guardrails.',
+            code: `def run_agent(user_message: str, max_steps: int = 10) -> str:
+    messages = [{"role": "user", "content": user_message}]
+
+    for _ in range(max_steps):
+        response = client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=2048,
+            tools=tools,
+            messages=messages,
+        )
+
+        # No tool requested → the model is done reasoning.
+        if response.stop_reason != "tool_use":
+            return response.content[0].text
+
+        messages.append({"role": "assistant", "content": response.content})
+
+        # YOUR code executes the tool. The model only asked.
+        results = []
+        for block in response.content:
+            if block.type == "tool_use":
+                output = TOOL_REGISTRY[block.name](**block.input)
+                results.append({
+                    "type": "tool_result",
+                    "tool_use_id": block.id,
+                    "content": str(output),
+                })
+
+        messages.append({"role": "user", "content": results})
+
+    # A step cap is a guardrail, not a formality — loops do run away.
+    return "Stopped: hit the step limit without finishing."`,
+          },
+        ]} />
+
+        <ExpandableCardGrid columns={3} cards={[
+          {
+            title: 'Web search', subtitle: 'Beat the training cutoff', color: 'blue',
+            content: 'The model picks a query, your code calls a search API, results come back as context.',
+            points: [
+              'The single most effective grounding tool',
+              'Providers: Brave, Serper, Tavily, or the provider\'s built-in search',
+              'Return snippets with URLs so the model can cite them',
+            ],
+            tags: ['Real-time', 'Grounding'],
+          },
+          {
+            title: 'File read / write', subtitle: 'Work on real data', color: 'purple',
+            content: 'Read source files to understand context, write results back out.',
+            points: [
+              'What Claude Code leans on constantly',
+              'Scope write access to specific directories — always',
+              'Reading is cheap to allow; writing deserves a whitelist',
+            ],
+            tags: ['Filesystem'],
+          },
+          {
+            title: 'Code execution', subtitle: 'Verify, do not assume', color: 'orange',
+            content: 'Run Python, JS or shell and feed the output back to the model.',
+            points: [
+              'Lets an agent check that its own generated code actually works',
+              'Turns "probably correct" into "tested"',
+              'Sandbox it. Never hand agent-generated code a full-privilege shell',
+            ],
+            tags: ['Sandbox required'],
+          },
+          {
+            title: 'API calls', subtitle: 'Connect to anything', color: 'teal',
+            content: 'Any REST endpoint can be a tool — market data, your database, a smart bulb.',
+            points: [
+              'The most common custom tool you will write',
+              'Return compact JSON; verbose responses waste context',
+              'Handle errors as tool results, not exceptions — let the model retry',
+            ],
+            tags: ['HTTP'],
+          },
+          {
+            title: 'Browser control', subtitle: 'Computer use', color: 'pink',
+            content: 'Navigate pages, click, fill forms, screenshot — driving a real browser.',
+            points: [
+              'Via Playwright or Puppeteer, or a provider\'s computer-use API',
+              'For sites that have no API, and for UI testing',
+              'Slow and brittle relative to an API. Prefer an API when one exists',
+            ],
+            tags: ['Playwright'],
+          },
+          {
+            title: 'Memory', subtitle: 'State across sessions', color: 'green',
+            content: 'Models are stateless. A memory tool lets one save facts now and recall them later.',
+            points: [
+              'Start with a JSON file. Move to SQLite, then a vector store, only when you must',
+              'Store decisions and preferences, not raw transcripts',
+              'Semantic recall needs embeddings — see Section 7',
+            ],
+            tags: ['Cross-session'],
+          },
+        ]} />
+      </Subsection>
+
+      <Subsection title="Four shapes of agent" icon={<Boxes className="w-4 h-4 text-violet-500" />}>
+        <Takeaway>
+          Complexity is a cost, not a badge. Pick the simplest shape the task tolerates.
+        </Takeaway>
+
+        <CompareTable
+          headers={['What it does', 'Reach for it when', 'Watch out for']}
+          rows={[
             {
-              id: 'observe',
-              label: 'Observe',
-              description: 'The agent receives input — a user request, a tool result, an event trigger, or the current state of a system. It now has a full picture of: the original task, what has happened so far, and what tools are available.',
-              color: 'blue',
+              attribute: 'Reactive',
+              values: [
+                'One trigger, one action. No planning.',
+                'The task is single-step and well defined — a bot replying to a message.',
+                'Almost nothing. This is the safe default.',
+              ],
             },
             {
-              id: 'think',
-              label: 'Think (LLM)',
-              description: 'The LLM processes everything in context and decides: Is the task done? If not, what\'s the next action? Which tool should I use? What parameters? This "thinking" is just text generation — the model outputs a structured action decision.',
-              color: 'purple',
+              attribute: 'Planning (ReAct)',
+              values: [
+                'Takes a goal, plans steps, executes them, adapts on results.',
+                'The task genuinely needs several dependent steps. Claude Code lives here.',
+                'Runaway loops. Always cap the step count.',
+              ],
             },
             {
-              id: 'act',
-              label: 'Act (Tool Call)',
-              description: 'The framework executes the tool the model requested — searching the web, reading a file, calling an API, running code, clicking a button. The model doesn\'t directly execute code; the surrounding framework does, based on the model\'s instruction.',
-              color: 'orange',
+              attribute: 'Multi-agent',
+              values: [
+                'An orchestrator delegating to specialised sub-agents, each with its own model and tools.',
+                'Sub-tasks are genuinely independent and benefit from parallelism or different tools.',
+                'A large jump in complexity and cost. Most projects that reach for this did not need it.',
+              ],
             },
             {
-              id: 'result',
-              label: 'Get Result',
-              description: 'The tool returns its output — search results, file contents, API response, code output, error message. This result is added to the context as a "tool result" message.',
-              color: 'teal',
-            },
-            {
-              id: 'loop',
-              label: 'Loop or Finish',
-              description: 'The agent loops back to Observe with the tool result now in context. It keeps looping until: (1) the task is complete and it gives a final answer, or (2) it needs human input, or (3) a maximum step limit is reached.',
-              color: 'green',
+              attribute: 'Autonomous',
+              values: [
+                'Runs on a schedule or trigger with no human in the loop.',
+                'The domain is narrow, the actions are reversible, and the guardrails are real.',
+                'Anything irreversible — money, emails, deletions. Require approval for those.',
+              ],
             },
           ]}
         />
-        <InfoCallout type="tip">
-          <strong>The loop is what makes agents powerful and risky.</strong> An agent can take dozens of actions autonomously. This is how Claude Code can write a full feature — it reads files, writes code, runs tests, fixes errors, and repeats. It's also why guardrails matter: define what the agent CAN'T do.
+
+        <InfoCallout type="warning">
+          <strong>On multi-agent systems:</strong> the <em>agents</em> coordinate, not the models.
+          Each agent has its own model as its brain. The orchestrator's model decides which sub-agent
+          to invoke; each sub-agent's model does its own work. Saying "the LLMs talk to each other"
+          hides where the loop and the state actually live.
         </InfoCallout>
       </Subsection>
 
-      <Subsection title="Tools — The Agent's Hands">
-        <Prose>
-          <p>Tools are functions the agent can call. They're what allow the AI to actually do things beyond generating text. When you give Claude Code access to your filesystem, you've given it a file-reading and file-writing tool. When you add a web search MCP, you've given it a search tool.</p>
-          <p>Any function can be a tool: you define it, describe it, and the model decides when to use it.</p>
-        </Prose>
-        <div className="mt-4" />
-        <ExpandableCardGrid columns={3} cards={[
-          {
-            title: 'Web Search',
-            subtitle: 'Real-time information',
-            content: 'Search the internet for current information. Bypasses the model\'s training cutoff.',
-            details: 'The model decides what query to search, your framework calls a search API (Brave, Google, Serper), the results come back as text in the context. The model then uses those results to answer. This is how AI can give you current stock prices, news, or documentation.',
-            tags: ['Real-time', 'Grounding'],
-            color: 'blue',
-          },
-          {
-            title: 'File Read/Write',
-            subtitle: 'Access the filesystem',
-            content: 'Read files, write files, list directories. Allows the agent to work with your actual data.',
-            details: 'This is what Claude Code uses constantly. It reads your source files to understand context, writes new code, edits existing files. For your own agents, file tools enable: reading a knowledge base, writing output reports, updating config files. Be careful with write access — always scope to specific directories.',
-            tags: ['Filesystem access', 'Claude Code core tool'],
-            color: 'purple',
-          },
-          {
-            title: 'Code Execution',
-            subtitle: 'Run code, get results',
-            content: 'Execute Python, JavaScript, shell commands and return the output to the model.',
-            details: 'A code-executing agent can: run a Python script and use the output, validate that generated code actually works, perform calculations, process data with real libraries. Claude Code can run your tests to verify its own changes work. Always sandbox code execution — never run agent-generated code with full system access.',
-            tags: ['Sandboxed exec', 'Verification'],
-            color: 'orange',
-          },
-          {
-            title: 'API Calls',
-            subtitle: 'Connect to anything',
-            content: 'Call external REST APIs — databases, services, IoT devices, third-party platforms.',
-            details: 'You can define a tool that calls any API: fetch a user\'s account data, post a tweet, check a stock price, control a smart home device. The model decides when to call it and what parameters to use. This is how a trading agent calls market data APIs, or a WhatsApp bot calls the Twilio API.',
-            tags: ['External services', 'HTTP requests'],
-            color: 'teal',
-          },
-          {
-            title: 'Browser Control',
-            subtitle: 'Computer use',
-            content: 'Navigate websites, click buttons, fill forms, take screenshots.',
-            details: 'Claude\'s "computer use" capability allows an agent to control a browser (via Playwright/Puppeteer). The model can see a screenshot, decide where to click, and navigate the web like a human. Use cases: scraping sites that block APIs, automating web workflows, testing UIs. Anthropic\'s computer use API and tools like browser-use make this accessible.',
-            tags: ['Playwright', 'Computer use'],
-            color: 'pink',
-          },
-          {
-            title: 'Memory / Database',
-            subtitle: 'Persistent state',
-            content: 'Store and retrieve information across conversations or sessions.',
-            details: 'LLMs are stateless — each conversation starts fresh. A memory tool lets the agent save information (user preferences, past decisions, learned facts) and retrieve it later. Implementations: simple JSON files, SQLite, vector databases (for semantic recall). Claude Code has memory built in via its memory system — you can tell it to remember things across sessions.',
-            tags: ['Cross-session', 'Vector DB'],
-            color: 'green',
-          },
-        ]} />
+      <Subsection title="Guardrails" icon={<ShieldAlert className="w-4 h-4 text-violet-500" />}>
+        <Takeaway>
+          An agent that can take fifty actions unattended needs a shorter list of things it may do,
+          not a longer one.
+        </Takeaway>
+
+        <Points items={[
+          <><strong>Cap the steps.</strong> A hard iteration limit turns an infinite loop into a failed run.</>,
+          <><strong>Whitelist, do not blacklist.</strong> Name the directories, the domains, the tables it may touch.</>,
+          <><strong>Separate read from write.</strong> Give reading freely; make every write deliberate.</>,
+          <><strong>Require approval for the irreversible.</strong> Spending money, sending mail, deleting data, publishing.</>,
+          <><strong>Log every tool call.</strong> When an agent does something odd, the trace is the only way to find out why.</>,
+          <><strong>Set a budget.</strong> A looping agent on a frontier model can spend real money before you notice.</>,
+        ]} color="red" />
+
+        <Example label="The cheapest guardrail there is">
+          A <code>max_steps</code> counter and a <code>DRY_RUN</code> flag. Run every new agent with
+          writes disabled and read the log before you let it act for real.
+        </Example>
       </Subsection>
 
-      <Subsection title="Types of Agents">
-        <ExpandableCardGrid columns={2} cards={[
-          {
-            title: 'Reactive Agent',
-            subtitle: 'Responds to triggers',
-            content: 'Takes action in response to an event. No planning — just respond.',
-            details: 'Example: A WhatsApp bot that reads an incoming message and replies. No multi-step planning needed — one event, one action. This is the simplest agent architecture and the right choice when tasks are well-defined and single-step.',
-            tags: ['Simple', 'Event-driven'],
-            color: 'blue',
-          },
-          {
-            title: 'Planning Agent',
-            subtitle: 'Breaks tasks into steps',
-            content: 'Receives a complex goal, plans a sequence of steps, executes them in order.',
-            details: 'Example: "Build me a React component that does X." The agent plans: read codebase → understand patterns → write component → write tests → verify tests pass. Claude Code is a planning agent. ReAct (Reason + Act) is the common pattern: think about what to do, then do it, observe the result, think again.',
-            tags: ['Multi-step', 'ReAct pattern'],
-            color: 'purple',
-          },
-          {
-            title: 'Multi-Agent System',
-            subtitle: 'Specialized agents coordinating with each other',
-            content: 'An orchestrator agent that delegates subtasks to specialized sub-agents, each powered by its own LLM.',
-            details: 'Example: Research agent (web search) + Writing agent (drafting) + Editor agent (review) all coordinated by an orchestrator agent. Each agent has its own LLM call, its own set of tools, and a specific role.\n\nKey precision: the agents coordinate — not the LLMs directly. Each LLM is the brain of its respective agent. The orchestrator\'s LLM decides which sub-agent to call; the sub-agents\' LLMs execute their tasks.\n\nThis enables parallelism and specialization but adds significant complexity. Use multi-agent architectures only when a single-agent approach is clearly insufficient.',
-            tags: ['Parallel work', 'Specialization'],
-            color: 'orange',
-          },
-          {
-            title: 'Autonomous Agent',
-            subtitle: 'Runs without human input',
-            content: 'Operates continuously, triggered by schedules or events, without requiring human approval for each action.',
-            details: 'Example: A trading agent that monitors markets every 15 minutes and executes trades based on predefined rules + LLM reasoning. Or a content pipeline that publishes articles every day. These require careful guardrails because they act without oversight. Key principle: limit scope rigorously. An autonomous agent should only act within a well-defined domain.',
-            tags: ['Scheduled', 'Guardrails essential'],
-            color: 'red',
-          },
-        ]} />
-      </Subsection>
-
-      <Subsection title="Key Agent Terms">
+      <Subsection title="Key terms" icon={<BookOpen className="w-4 h-4 text-violet-500" />}>
         <TermsMemoryBlock terms={[
-          { term: 'Tool call', definition: 'The structured request an LLM makes to execute a tool — includes the tool name and parameters. The framework executes it and returns the result.' },
-          { term: 'Tool result', definition: 'The output returned to the model after a tool executes. Gets added to the conversation context so the model can use the information.' },
-          { term: 'Agentic loop', definition: 'The observe → think → act → observe cycle that agents run. Each iteration processes the latest state and decides the next action.' },
-          { term: 'Orchestrator', definition: 'In a multi-agent system, the LLM that coordinates other agents — assigns tasks, collects results, decides what to do next.' },
-          { term: 'ReAct', definition: 'Reasoning + Acting. A prompting pattern where the model alternates between reasoning ("I need to find X") and acting (calling a tool). Standard pattern for planning agents.' },
-          { term: 'Guardrails', definition: 'Constraints that limit what an agent can do. Critical for autonomous agents — define what tools it has access to, what domains it operates in, and when it must pause for human approval.' },
+          {
+            term: 'Tool call',
+            short: 'The model\'s structured request to run a tool — name plus arguments.',
+            example: '{ "name": "get_price", "input": { "symbol": "BTC" } }',
+            detail: 'It is only a request. Your code decides whether to honour it.',
+          },
+          {
+            term: 'Tool result',
+            short: 'What you send back after running the tool. Becomes part of the context.',
+            example: '{ "price": 64210.55 }',
+            detail: 'Send errors back as results too — the model can often recover, where an exception just kills the run.',
+          },
+          {
+            term: 'Agentic loop',
+            short: 'Observe → think → act → observe, repeating until done.',
+            detail: 'The entire structural difference between an agent and a chatbot.',
+          },
+          {
+            term: 'ReAct',
+            short: 'Reason + Act — alternating between thinking out loud and calling a tool.',
+            detail: 'The standard pattern for planning agents, and the shape of the trace in the lab above.',
+          },
+          {
+            term: 'Orchestrator',
+            short: 'In a multi-agent system, the agent that assigns work to the others and collects results.',
+          },
+          {
+            term: 'Guardrails',
+            short: 'The explicit limits on what an agent may do.',
+            example: 'max_steps, allowed paths, approval gates',
+            detail: 'Not optional for anything autonomous. Design them before the agent, not after an incident.',
+          },
         ]} />
       </Subsection>
 
-      <Subsection title="Common Confusion">
+      <Subsection title="Common confusion" icon={<AlertTriangle className="w-4 h-4 text-amber-500" />}>
         <CommonConfusionBlock confusions={[
+          {
+            itemA: 'The LLM executes tools',
+            itemB: 'Your framework executes tools',
+            explanation: 'The model emits text saying which tool it wants and with what arguments. Your code reads that, runs the function, and hands back the result. The model never opens a socket or touches a file.',
+            fix: 'The model decides. Your code does. That gap is where every guardrail lives.',
+          },
           {
             itemA: 'Agent',
             itemB: 'Chatbot',
-            explanation: 'A chatbot has one turn: you send a message, it replies. An agent loops: it takes actions, observes results, and keeps going until the task is done. Most "AI assistants" you interact with are chatbots; Claude Code and Auto-GPT are agents.',
+            explanation: 'A chatbot takes one turn: message in, reply out. An agent loops — acting, observing, and deciding again until the task is done or a limit is hit.',
+            fix: 'No loop and no tools means it is a chatbot, however clever it sounds.',
           },
           {
             itemA: 'Agent',
-            itemB: 'Automation (n8n / Zapier)',
-            explanation: 'Traditional automation follows fixed, predefined rules ("if X then Y"). An agent uses an LLM to reason about what to do next — it can handle novel situations, make judgment calls, and adapt. The boundary is blurring as automation tools add AI nodes.',
+            itemB: 'Automation (n8n, Zapier)',
+            explanation: 'Classic automation follows a fixed graph you drew. An agent decides the path at runtime, which lets it handle situations you did not anticipate — and also lets it surprise you.',
+            fix: 'Fixed path → automation. Chosen path → agent. If the path never varies, you did not need an agent.',
           },
           {
-            itemA: 'The LLM executes tools',
-            itemB: 'The framework executes tools',
-            explanation: 'The LLM just generates text describing which tool to call and with what parameters. Your code (or a framework like LangChain, Claude\'s SDK) actually executes the function. The LLM never directly runs code or makes HTTP requests — it instructs your framework to do so.',
+            itemA: 'More agents',
+            itemB: 'A better system',
+            explanation: 'Multi-agent architectures multiply cost, latency and failure modes. Most tasks that people split across five agents run better as one agent with five tools.',
+            fix: 'Add a tool before you add an agent.',
           },
         ]} />
       </Subsection>
 
       <TryThisCallout
-        title="Try: Think Like an Agent"
-        prompt={`You are an AI agent with access to these tools:
+        title="Try: reason like an agent"
+        prompt={`You are an AI agent with these tools:
 - web_search(query: string) → search results
 - read_file(path: string) → file contents
 - write_file(path: string, content: string) → confirmation
 
-Task: A user wants to know the current price of Bitcoin and save it to a file called "btc_price.txt".
+Task: find the current price of Bitcoin and save it to "btc_price.txt".
 
-Walk me through your plan step by step:
-1. What tool do you call first?
+Before doing anything, walk me through your plan:
+1. Which tool do you call first, and with what arguments?
 2. What do you do with the result?
-3. What tool do you call next?
-4. How do you know you're done?`}
+3. Which tool comes next?
+4. How do you know you are finished?
+5. What would you do if the first tool returned an error?`}
       />
 
-      <Subsection title="Mini Recall">
+      <Subsection title="Check yourself" icon={<HelpCircle className="w-4 h-4 text-violet-500" />}>
         <MiniRecallBlock questions={[
-          { question: 'What is the core difference between a chatbot and an agent?', answer: 'A chatbot responds to messages in a single turn (no tools, no loop). An agent drives a control loop: observe → LLM decides action → execute tool → observe result → repeat, until the task is complete. Agents can take sequences of autonomous actions. The LLM is the reasoning core inside the agent — it doesn\'t execute actions itself; the framework does.' },
-          { question: 'You want to build an agent that monitors a website for price drops. What type is this?', answer: 'A reactive agent (or autonomous agent if scheduled). It\'s triggered by an external condition (price change) and takes action (send notification, execute trade). Needs a tool for web fetching and a tool for notifications.' },
-          { question: 'Why do agents need guardrails?', answer: 'Because agents can take many autonomous actions in a loop. Without constraints on what tools they can use and what domains they operate in, they can cause unintended consequences. Limit scope, require human approval for high-stakes actions.' },
+          {
+            question: 'What separates an agent from a chatbot?',
+            answer: 'The loop and the tools. A chatbot answers once. An agent observes, decides, acts, observes the result, and decides again until the task is done. The model is the reasoning part inside it — your code runs the loop and executes the tools.',
+          },
+          {
+            question: 'Your agent called the same tool eleven times with the same arguments. What went wrong?',
+            answer: 'It is not recognising the result as progress — usually because the tool returned something unhelpful, or an error was swallowed instead of being returned as a tool result. Cap the steps so it fails fast, then read the trace.',
+          },
+          {
+            question: 'You want to monitor a site for price drops. What shape of agent is that?',
+            answer: 'Reactive, or autonomous if it runs on a schedule. One trigger, one action. It needs a fetch tool and a notify tool — and no planning at all.',
+          },
+          {
+            question: 'Why are guardrails not optional for autonomous agents?',
+            answer: 'Because nobody is watching. Dozens of actions can happen before you look. Cap iterations, whitelist what it may touch, gate anything irreversible behind approval, and log every call.',
+          },
+          {
+            question: 'Where should you put most of your effort when a tool is being used at the wrong times?',
+            answer: 'The tool description. It is a prompt, not documentation — say plainly when to use the tool and when not to. That single string decides the model\'s choice.',
+          },
         ]} />
       </Subsection>
 
-      <CheatSheetPanel title="Section 4 Summary" items={[
-        { label: 'Agent = system', value: 'LLM (reasoning) + tools (hands) + loop (control flow) + memory (state)' },
-        { label: 'Agent loop', value: 'Observe → Think (LLM) → Act (tool) → Get result → Loop or finish' },
-        { label: 'Tool', value: 'Any function the agent can call: search, file, API, browser, code exec' },
-        { label: 'ReAct pattern', value: 'Reason then act, alternating — standard for planning agents' },
-        { label: 'Reactive agent', value: 'Event triggers → one action. Simple and predictable.' },
-        { label: 'Planning agent', value: 'Complex goal → plan steps → execute in sequence (Claude Code)' },
-        { label: 'Multi-agent', value: 'Orchestrator + specialized sub-agents for complex parallel tasks' },
-        { label: 'Guardrails', value: 'Define allowed tools, domains, and when to pause for human approval' },
-        { label: 'Key rule', value: 'The LLM decides WHAT to do. Your framework actually does it.' },
+      <CheatSheetPanel title="Section 4 in nine lines" items={[
+        { label: 'Agent =', value: 'model (reasoning) + tools (hands) + loop (control) + memory (state).' },
+        { label: 'The loop', value: 'Observe → think → act → observe → repeat, until done or capped.' },
+        { label: 'Tool', value: 'Any function you described well enough for the model to know when to call it.' },
+        { label: 'Tool descriptions', value: 'They are prompts. Say when to use it — and when not to.' },
+        { label: 'ReAct', value: 'Reason then act, alternating. The standard planning pattern.' },
+        { label: 'Reactive', value: 'One trigger, one action. The safe default.' },
+        { label: 'Multi-agent', value: 'Real cost in complexity. Add a tool before you add an agent.' },
+        { label: 'Guardrails', value: 'Step caps, whitelists, approval on anything irreversible, full logging.' },
+        { label: 'The rule', value: 'The model decides what. Your code does it. Guard that gap.' },
       ]} />
     </SectionShell>
   )

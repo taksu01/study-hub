@@ -1,8 +1,11 @@
+import { Monitor, Download, Cpu, Boxes, BookOpen, HelpCircle, AlertTriangle } from 'lucide-react'
 import {
-  SectionShell, SectionHeader, Subsection, Prose,
-  ExpandableCardGrid, CompareTable, TermsMemoryBlock,
-  MiniRecallBlock, CheatSheetPanel, InfoCallout, TryThisCallout, NumberedSteps
+  SectionShell, SectionHeader, Subsection, Takeaway, Example,
+  ExpandableCardGrid, TermsMemoryBlock, MiniRecallBlock,
+  CheatSheetPanel, InfoCallout, NumberedSteps, CommonConfusionBlock, CompareTable,
 } from '../components/ui'
+import { HardwareLab } from '../components/viz/HardwareLab'
+import { CodeBlock, Code } from '../components/CodeBlock'
 
 export default function Section06() {
   return (
@@ -10,220 +13,366 @@ export default function Section06() {
       <SectionHeader
         number={6}
         title="Local AI Setup"
-        subtitle="Run powerful AI models on your own machine — free, private, and fully offline with Ollama."
+        subtitle="Capable models running on your own machine — free, private, offline. The whole setup takes about five minutes; picking the right model takes the rest of this section."
       />
 
-      <Subsection title="Why Run AI Locally?">
-        <Prose>
-          <p>Cloud AI APIs (Claude, GPT-4) are convenient but they have real limitations: every message you send is processed on someone else's server, there's a cost per token, and you need an internet connection. Local AI solves all three problems at once.</p>
-          <p>With local AI you get: complete privacy (nothing leaves your machine), zero per-token cost, offline capability, no rate limits, and the ability to modify and customize models. The tradeoff: you need decent hardware, and most local models aren't quite as capable as the top cloud models — though the gap is closing fast.</p>
-        </Prose>
+      <Subsection title="Why bother" icon={<Monitor className="w-4 h-4 text-violet-500" />}>
+        <Takeaway>
+          Cloud APIs are more capable. Local models are private, free per call, and always available.
+          The right answer is to have both and route between them.
+        </Takeaway>
+
         <ExpandableCardGrid columns={3} cards={[
           {
-            title: 'Complete Privacy',
-            subtitle: 'Data never leaves your machine',
-            content: 'Sensitive business data, personal notes, proprietary code — all processed locally.',
-            details: 'Medical records, legal documents, unreleased product specs, personal journals, trading strategies. None of this should go through a third-party API. Local AI is the right choice when data sensitivity is high.',
-            tags: ['Zero data exposure', 'GDPR-friendly'],
-            color: 'green',
+            title: 'Privacy', subtitle: 'Nothing leaves the machine', color: 'green',
+            content: 'The only option for data you genuinely cannot send to a third party.',
+            points: [
+              'Medical and legal documents, unreleased specs, client contracts',
+              'Personal journals, financial records, trading strategies',
+              'No API terms to read, because there is no API',
+            ],
+            tags: ['Zero exposure'],
           },
           {
-            title: 'Zero Cost',
-            subtitle: 'No API fees, ever',
-            content: 'Run unlimited queries for the price of electricity. Great for high-volume use cases.',
-            details: 'Running Llama 3.3 70B on a local machine costs ~$0 per query (just electricity). At $0.003/1k tokens for cloud APIs, 10 million tokens = $30. For a personal assistant processing hundreds of messages daily, local AI saves real money.',
-            tags: ['Free after hardware', 'High volume'],
-            color: 'blue',
+            title: 'Zero marginal cost', subtitle: 'Free after the hardware', color: 'blue',
+            content: 'Unlimited calls for the price of electricity. Transforms what is worth automating.',
+            points: [
+              'High-volume classification and tagging becomes free',
+              'You can afford to run something on every file, every message, every commit',
+              'No rate limits and no quota anxiety while prototyping',
+            ],
+            tags: ['High volume'],
           },
           {
-            title: 'Works Offline',
-            subtitle: 'No internet dependency',
-            content: 'Fully functional in planes, remote areas, or secure environments that block cloud access.',
-            details: 'Travel, network outages, or corporate firewalls that block external AI services. A local model is always available. Also useful for development — you can test your AI app without internet or API credits.',
-            tags: ['Offline', 'No rate limits'],
-            color: 'orange',
+            title: 'Always available', subtitle: 'No network required', color: 'orange',
+            content: 'Planes, outages, corporate firewalls that block AI services.',
+            points: [
+              'Develop and test without burning API credits',
+              'No provider outage can take your tool down',
+              'Deterministic latency — no queue behind other customers',
+            ],
+            tags: ['Offline'],
           },
         ]} />
+
+        <InfoCallout type="warning">
+          <strong>The honest trade-off:</strong> an 8B local model is not Claude. It is genuinely good
+          at summarising, rewriting, extraction and classification, and noticeably weaker at hard
+          reasoning and long-horizon coding. Route accordingly rather than expecting parity.
+        </InfoCallout>
       </Subsection>
 
-      <Subsection title="Ollama — Get Started in 5 Minutes">
-        <Prose>
-          <p>Ollama is the easiest way to run AI models locally. It handles model downloading, loading, and serving — you get an OpenAI-compatible API on <code>localhost:11434</code> that you can use in any application.</p>
-        </Prose>
+      <Subsection title="What will actually run on your machine" icon={<Cpu className="w-4 h-4 text-violet-500" />}>
+        <Takeaway>
+          Memory is the binding constraint, not the CPU. If the model does not fit in RAM it spills to
+          disk, and "slow" becomes "unusable".
+        </Takeaway>
+
+        <HardwareLab />
+
+        <Example label="The rule of thumb behind that lab">
+          <strong>Memory needed ≈ parameters × bytes-per-weight × 1.2.</strong> At Q4 that is about
+          0.55 bytes per parameter — so a 7B model needs roughly 4 GB, and a 70B model roughly 39 GB.
+          Leave 4–6 GB free for the OS on top.
+        </Example>
+
+        <InfoCallout type="tip">
+          <strong>Apple Silicon is unusually good at this.</strong> Unified memory means a 32 GB
+          MacBook can run models that would need a 32 GB discrete GPU on a PC. On Windows and Linux,
+          VRAM is what counts if you have a dedicated card; system RAM if you do not.
+        </InfoCallout>
+      </Subsection>
+
+      <Subsection title="Ollama in five minutes" icon={<Download className="w-4 h-4 text-violet-500" />}>
+        <Takeaway>
+          Ollama downloads, loads and serves models, and exposes an OpenAI-compatible API on
+          <Code>localhost:11434</Code>. Anything written against the OpenAI SDK works against it with
+          a changed base URL.
+        </Takeaway>
+
         <NumberedSteps steps={[
           {
-            title: 'Download and install Ollama',
-            description: 'Go to ollama.com and download the installer for your OS (Windows, Mac, Linux). It\'s a simple one-click install.',
-            code: '# After install, verify it works:\nollama --version',
+            title: 'Install',
+            description: 'Download the installer from ollama.com — Windows, macOS and Linux all have one-click builds.',
+            code: 'ollama --version',
           },
           {
             title: 'Pull and run your first model',
-            description: 'This downloads Llama 3.2 (2GB) and starts a chat session. Your first run downloads the model; subsequent runs are instant.',
-            code: 'ollama run llama3.2',
+            description: 'Start small. This is ~2 GB and runs on almost anything. First run downloads; later runs are instant.',
+            code: 'ollama run llama3.2:3b',
           },
           {
-            title: 'Try a larger model (if you have 16GB+ RAM)',
-            description: 'Llama 3.2 is fast but small. For serious use, pull a larger model. This downloads ~5GB.',
-            code: 'ollama pull llama3.2:latest   # 8B, ~5GB, balanced\nollama pull mistral           # 7B, good for coding',
+            title: 'Step up to the everyday workhorse',
+            description: 'If the lab above says you have room, this is the model most people should actually live on.',
+            code: 'ollama pull llama3.1:8b',
           },
           {
-            title: 'Use the REST API (same as OpenAI format)',
-            description: 'Ollama runs an OpenAI-compatible API. Any app that uses the OpenAI SDK works with Ollama by just changing the base URL.',
-            code: 'curl http://localhost:11434/api/chat -d \'{\n  "model": "llama3.2",\n  "messages": [{"role": "user", "content": "Hello!"}]\n}\'',
+            title: 'Check what you have and what it costs you',
+            description: 'List installed models with their sizes, and inspect one to see its context window and quantization.',
+            code: 'ollama list\nollama show llama3.1:8b',
           },
           {
-            title: 'Install Open WebUI (optional but recommended)',
-            description: 'A beautiful ChatGPT-like web interface for your local models. Run it with Docker.',
-            code: 'docker run -d -p 3000:8080 \\\n  --add-host=host.docker.internal:host-gateway \\\n  -v open-webui:/app/backend/data \\\n  --name open-webui \\\n  ghcr.io/open-webui/open-webui:main\n\n# Then visit: http://localhost:3000',
+            title: 'Add a chat UI (optional)',
+            description: 'Open WebUI gives you a ChatGPT-like interface over your local models, with document upload for RAG built in.',
+            code: 'docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway -v open-webui:/app/backend/data --name open-webui ghcr.io/open-webui/open-webui:main',
           },
         ]} />
-        <TryThisCallout
-          title="First Ollama Commands to Try"
-          prompt={`# List available models on your machine
-ollama list
 
-# Pull a model (downloads it)
-ollama pull llama3.2
+        <CodeBlock tabs={[
+          {
+            label: 'Python (OpenAI SDK)',
+            language: 'python',
+            note: 'Two lines change. Everything else is identical to calling OpenAI.',
+            code: `from openai import OpenAI
 
-# Run interactively (type messages, Ctrl+D to exit)
-ollama run llama3.2
+client = OpenAI(
+    base_url="http://localhost:11434/v1",  # Ollama, not OpenAI
+    api_key="ollama",                       # Required, but ignored
+)
 
-# Run with a one-shot prompt
-ollama run llama3.2 "Explain what a token is in AI"
+resp = client.chat.completions.create(
+    model="llama3.1:8b",
+    messages=[{"role": "user", "content": "Explain what a token is."}],
+)
 
-# See model info and specs
-ollama show llama3.2
+print(resp.choices[0].message.content)`,
+          },
+          {
+            label: 'JavaScript',
+            language: 'javascript',
+            code: `import OpenAI from 'openai'
 
-# Remove a model to free space
-ollama rm llama3.2
+const client = new OpenAI({
+  baseURL: 'http://localhost:11434/v1',
+  apiKey: 'ollama',
+})
 
-# Ollama API (OpenAI-compatible)
-# Base URL: http://localhost:11434/v1
-# Works with openai Python SDK: set base_url and api_key="ollama"`}
-        />
+const resp = await client.chat.completions.create({
+  model: 'llama3.1:8b',
+  messages: [{ role: 'user', content: 'Explain what a token is.' }],
+})
+
+console.log(resp.choices[0].message.content)`,
+          },
+          {
+            label: 'Shell',
+            language: 'bash',
+            code: `# Interactive session — Ctrl+D to exit
+ollama run llama3.1:8b
+
+# One-shot prompt
+ollama run llama3.1:8b "Explain what a token is in AI"
+
+# Native REST API
+curl http://localhost:11434/api/chat -d '{
+  "model": "llama3.1:8b",
+  "messages": [{"role": "user", "content": "Hello"}],
+  "stream": false
+}'
+
+# Free up disk when you are done experimenting
+ollama rm llama3.2:3b`,
+          },
+        ]} />
       </Subsection>
 
-      <Subsection title="Which Model to Run — Hardware Guide">
-        <Prose>
-          <p>The most important constraint is RAM. Models need to fit in RAM (or VRAM if using a GPU) to run. A general rule: a model's size in GB is roughly its parameter count × quantization bits ÷ 8. A 7B Q4 model ≈ 4GB.</p>
-        </Prose>
-        <CompareTable
-          headers={['Recommended Models', 'RAM Required', 'Quality', 'Speed']}
-          rows={[
-            { attribute: '8GB RAM', values: ['llama3.2:3b, phi3:mini, gemma2:2b', '4-6GB free', 'Good for simple tasks', 'Very fast'] },
-            { attribute: '16GB RAM', values: ['llama3.2, mistral:7b, gemma2:9b', '8-10GB free', 'Solid general purpose', 'Fast'] },
-            { attribute: '32GB RAM', values: ['llama3.1:13b, qwen2.5:14b, codellama:13b', '16-20GB free', 'Very good, near GPT-3.5 level', 'Moderate'] },
-            { attribute: '64GB RAM', values: ['llama3.3:70b, qwen2.5:32b, deepseek-r1:32b', '40-50GB free', 'Excellent, near GPT-4 level', 'Slower'] },
-            { attribute: 'GPU (8GB VRAM)', values: ['llama3.2, mistral:7b (GPU-accelerated)', '8GB VRAM', 'Same quality, much faster', 'Very fast (GPU)'] },
-          ]}
-        />
-        <InfoCallout type="warning">
-          Always leave 4-6GB of RAM free for your OS and other programs. If a model is too large, Ollama will use disk (swap) which makes it extremely slow. Better to run a smaller model that fits comfortably in RAM.
-        </InfoCallout>
-      </Subsection>
-
-      <Subsection title="Model Recommendations by Use Case">
+      <Subsection title="Which model for which job" icon={<Boxes className="w-4 h-4 text-violet-500" />}>
         <ExpandableCardGrid columns={2} cards={[
           {
-            title: 'Llama 3.3 70B',
-            subtitle: 'Best overall quality (needs 64GB RAM)',
-            content: 'Meta\'s flagship open-source model. Competitive with GPT-4 on many benchmarks.',
-            details: 'Pull: ollama pull llama3.3:70b\nSize: ~45GB\nBest for: complex reasoning, long documents, coding, anything you\'d use Claude for\nRequires: 64GB RAM or GPU with 48GB VRAM\nNote: The Q4_K_M quantization is the best quality/size tradeoff',
-            tags: ['Best quality', '64GB RAM'],
-            color: 'purple',
+            title: 'Llama 3.1 8B', subtitle: 'Start here', color: 'blue',
+            content: 'The default recommendation. Fits in ~6 GB, fast enough to be pleasant, good at everyday work.',
+            points: [
+              'Summarising, rewriting, extraction, question answering',
+              'Comfortable on a 16 GB laptop with room to spare',
+              'If you only ever install one local model, make it this',
+            ],
+            example: 'ollama pull llama3.1:8b',
+            tags: ['16 GB', 'Balanced'],
           },
           {
-            title: 'Llama 3.2 (8B)',
-            subtitle: 'Everyday workhorse (16GB RAM)',
-            content: 'Great balance of quality, speed, and RAM usage. Best starting point for most people.',
-            details: 'Pull: ollama pull llama3.2\nSize: ~5GB\nBest for: everyday chat, summarization, question answering, simple coding\nRequires: 16GB RAM (8GB minimum)\nThis is the model to use when you just want things to work without fuss.',
-            tags: ['Balanced', '16GB RAM'],
-            color: 'blue',
+            title: 'Qwen 2.5 Coder', subtitle: 'Best local coding model', color: 'orange',
+            content: 'Coding-specialised and routinely beats larger general models on code tasks.',
+            points: [
+              'Available at 7B (~5 GB) and 14B (~9 GB)',
+              'Strong at generation, review, and explaining unfamiliar code',
+              'The 14B is worth the extra memory if you have it',
+            ],
+            example: 'ollama pull qwen2.5-coder:7b',
+            tags: ['Coding', '16–32 GB'],
           },
           {
-            title: 'Qwen2.5-Coder',
-            subtitle: 'Best coding model locally',
-            content: 'Alibaba\'s coding-specialized model. Excellent at code generation, debugging, and explanation.',
-            details: 'Pull: ollama pull qwen2.5-coder:7b (or :14b for better quality)\nSize: ~5GB (7B) / ~9GB (14B)\nBest for: code generation, code review, debugging, explaining code\nSurprises: often outperforms Llama on coding tasks despite smaller size',
-            tags: ['Coding specialist', 'Multiple sizes'],
-            color: 'orange',
-          },
-          {
-            title: 'DeepSeek-R1',
-            subtitle: 'Best reasoning locally',
-            content: 'Chinese open-source model with exceptional reasoning, competitive with o1 on math and logic.',
-            details: 'Pull: ollama pull deepseek-r1:7b (or :14b, :32b)\nSize: 7B = ~5GB, 32B = ~20GB\nBest for: math problems, logic puzzles, step-by-step reasoning\nNote: Shows its thinking process (chain-of-thought) in <think> tags',
+            title: 'DeepSeek-R1', subtitle: 'Best local reasoning', color: 'teal',
+            content: 'Shows its full chain of thought in <think> tags. Competitive with closed reasoning models on maths.',
+            points: [
+              'Sizes from 7B to 70B — start at 7B and move up if it is not enough',
+              'Much slower than a standard model, by design',
+              'Use it for the hard problems, not as your daily driver',
+            ],
+            example: 'ollama pull deepseek-r1:7b',
             tags: ['Reasoning', 'Shows thinking'],
-            color: 'teal',
           },
           {
-            title: 'Phi-3 Mini / Phi-4',
-            subtitle: 'Best for low-end hardware (8GB RAM)',
-            content: 'Microsoft\'s small but surprisingly capable models. Punch well above their weight class.',
-            details: 'Pull: ollama pull phi3:mini\nSize: ~2GB (mini), ~4GB (medium)\nBest for: when you have limited RAM, fast responses, simple tasks\nSurprises: phi3-mini (3.8B) regularly beats larger models on reasoning benchmarks',
-            tags: ['8GB RAM friendly', 'Fast'],
-            color: 'green',
+            title: 'Phi-4 / Phi-3 Mini', subtitle: 'For constrained hardware', color: 'green',
+            content: 'Microsoft\'s small models punch well above their parameter count.',
+            points: [
+              'phi3:mini is ~2 GB and runs on 8 GB machines comfortably',
+              'Beats larger models on some reasoning benchmarks',
+              'The right answer when nothing else fits',
+            ],
+            example: 'ollama pull phi3:mini',
+            tags: ['8 GB friendly'],
           },
           {
-            title: 'Gemma 2',
-            subtitle: 'Google\'s open release',
-            content: 'Google\'s open-source model family. Well-rounded with good safety tuning.',
-            details: 'Pull: ollama pull gemma2:9b\nSize: ~6GB (9B), ~17GB (27B)\nBest for: general chat, following instructions, creative writing\nNote: Very well-behaved, follows complex instructions reliably',
-            tags: ['Google', 'Well-tuned'],
-            color: 'cyan',
+            title: 'Llama 3.3 70B', subtitle: 'Best local quality', color: 'purple',
+            content: 'Close to cloud quality on many tasks — if you have the memory for it.',
+            points: [
+              '~39 GB at Q4, so realistically 64 GB of RAM or a serious GPU',
+              'Worth it when privacy is non-negotiable and the work is hard',
+              'Expect seconds per response, not milliseconds, on CPU',
+            ],
+            example: 'ollama pull llama3.3:70b',
+            tags: ['64 GB'],
+          },
+          {
+            title: 'Gemma 2', subtitle: 'Reliable instruction follower', color: 'cyan',
+            content: 'Google\'s open family. Well-behaved and consistent about following complex instructions.',
+            points: [
+              '9B is ~6 GB; 27B is ~17 GB',
+              'A good pick when you need it to obey a strict output format',
+            ],
+            example: 'ollama pull gemma2:9b',
+            tags: ['Google'],
           },
         ]} />
       </Subsection>
 
-      <Subsection title="Understanding Quantization">
-        <Prose>
-          <p>Model files come in different "quantizations" — essentially different compression levels. A Q4 version is 4-bit, a Q8 is 8-bit, F16 is 16-bit (full precision). Higher bits = better quality but larger size.</p>
-        </Prose>
+      <Subsection title="Quantization, concretely" icon={<Cpu className="w-4 h-4 text-violet-500" />}>
+        <Takeaway>
+          Quantization compresses the weights from 16-bit floats down to 4 or 8 bits. Q4 roughly
+          quarters the file for a quality cost most people cannot detect in ordinary use.
+        </Takeaway>
+
         <CompareTable
-          headers={['Q4_K_M', 'Q8_0', 'F16 (full)']}
+          headers={['Q4_K_M', 'Q8_0', 'FP16']}
           rows={[
-            { attribute: 'Bits per weight', values: ['4-bit', '8-bit', '16-bit float'] },
-            { attribute: 'Size (7B model)', values: ['~4 GB', '~7 GB', '~14 GB'] },
-            { attribute: 'Quality loss', values: ['Mild (~5%)', 'Minimal (~1%)', 'None (reference)'] },
-            { attribute: 'Runs on', values: ['Most laptops (16GB RAM)', 'Gaming rigs (32GB RAM)', 'High-end GPU only'] },
-            { attribute: 'Use when', values: ['Starting out, everyday use', 'Quality matters more than size', 'Research, fine-tuning prep'] },
+            { attribute: 'Bits per weight', values: ['4', '8', '16'] },
+            { attribute: 'Size of a 7B model', values: ['~4 GB', '~7 GB', '~14 GB'] },
+            { attribute: 'Quality cost', values: ['Mild — rarely noticeable in chat', 'Near zero', 'None, by definition'] },
+            { attribute: 'Runs on', values: ['A normal 16 GB laptop', 'A 32 GB machine', 'A serious GPU'] },
+            { attribute: 'Choose it when', values: ['Almost always — this is Ollama\'s default', 'You have memory spare and want the last few percent', 'You are fine-tuning, not just running'] },
           ]}
         />
+
         <InfoCallout type="tip">
-          <strong>For most use cases, Q4_K_M is the right choice.</strong> The quality difference is barely noticeable for everyday tasks, and it fits on normal laptops. Ollama downloads Q4_K_M by default.
+          <strong>Do not overthink it.</strong> Ollama pulls Q4_K_M by default and that is the right
+          call. A bigger model at Q4 beats a smaller model at Q8 nearly every time — spend your
+          memory on parameters, not precision.
         </InfoCallout>
       </Subsection>
 
-      <Subsection title="Key Terms">
+      <Subsection title="Key terms" icon={<BookOpen className="w-4 h-4 text-violet-500" />}>
         <TermsMemoryBlock terms={[
-          { term: 'Ollama', definition: 'A local AI runtime that downloads and serves open-source models. Provides an OpenAI-compatible API at localhost:11434.' },
-          { term: 'Open WebUI', definition: 'A self-hosted web interface for chatting with local Ollama models. Looks like ChatGPT, runs 100% locally.' },
-          { term: 'GGUF', definition: 'The file format used by quantized models that run on consumer hardware (CPU/GPU). What Ollama downloads.' },
-          { term: 'VRAM', definition: 'Video RAM — the dedicated memory on your GPU. For GPU-accelerated inference, the model must fit in VRAM. GPUs are 5-10x faster than CPU inference.' },
-          { term: 'Quantization', definition: 'Reducing model precision from 16/32-bit floats to 4/8-bit integers. Makes models smaller and faster, with minor quality tradeoff.' },
-          { term: 'llama.cpp', definition: 'The underlying C++ library that powers Ollama and enables running quantized models on CPU. Ollama wraps it with a nice API and model management.' },
+          {
+            term: 'Ollama',
+            short: 'A local runtime that downloads, loads and serves open models.',
+            example: 'OpenAI-compatible API on localhost:11434',
+          },
+          {
+            term: 'Open WebUI',
+            short: 'A self-hosted chat interface over your local models.',
+            example: 'Looks like ChatGPT, runs entirely on your machine',
+            detail: 'Includes document upload with built-in RAG — the fastest way to chat with your own PDFs without writing code.',
+          },
+          {
+            term: 'GGUF',
+            short: 'The file format for quantized models that run on consumer hardware.',
+            detail: 'What Ollama downloads. Successor to GGML.',
+          },
+          {
+            term: 'VRAM',
+            short: 'Dedicated memory on a discrete GPU. GPU inference needs the model to fit here.',
+            example: 'GPU inference is 5–10× faster than CPU',
+            detail: 'Apple Silicon has no separate VRAM — unified memory serves both, which is why Macs punch above their spec sheet here.',
+          },
+          {
+            term: 'Quantization',
+            short: 'Storing weights at lower precision so the model fits in less memory.',
+            example: 'Q4 ≈ a quarter the size of FP16',
+          },
+          {
+            term: 'llama.cpp',
+            short: 'The C++ engine underneath Ollama that makes CPU inference practical.',
+            detail: 'Ollama is essentially model management and a nice API wrapped around it.',
+          },
+          {
+            term: 'Context length (local)',
+            short: 'Local models advertise large windows but using them costs real memory.',
+            example: 'A 128k context can need several extra GB',
+            detail: 'Ollama defaults to a much smaller window than the model supports. Raise num_ctx deliberately and watch your memory.',
+          },
         ]} />
       </Subsection>
 
-      <Subsection title="Mini Recall">
+      <Subsection title="Common confusion" icon={<AlertTriangle className="w-4 h-4 text-amber-500" />}>
+        <CommonConfusionBlock confusions={[
+          {
+            itemA: 'A bigger model',
+            itemB: 'A better experience',
+            explanation: 'A model that does not fit in memory spills to disk. Token generation drops from readable speed to several seconds per word, and the machine becomes unusable for anything else.',
+            fix: 'The biggest model that fits comfortably — not the biggest one that technically loads.',
+          },
+          {
+            itemA: 'The advertised context window',
+            itemB: 'The window you get',
+            explanation: 'Ollama defaults to a far smaller context than the model supports, because the KV cache for a large window costs gigabytes. Your 128k model may be running at 2k until you say otherwise.',
+            fix: 'Set num_ctx explicitly, and budget the extra memory for it.',
+          },
+          {
+            itemA: 'Local model quality',
+            itemB: 'Frontier model quality',
+            explanation: 'An 8B model is excellent at bounded text work and clearly weaker at multi-step reasoning and long coding tasks. Benchmarks that show parity usually measure something narrow.',
+            fix: 'Route by task. Local for private and routine, cloud for hard.',
+          },
+        ]} />
+      </Subsection>
+
+      <Subsection title="Check yourself" icon={<HelpCircle className="w-4 h-4 text-violet-500" />}>
         <MiniRecallBlock questions={[
-          { question: 'You have 16GB of RAM. Which Ollama model gives the best quality within your constraints?', answer: 'llama3.2 (8B, ~5GB) or mistral:7b (~5GB). Both fit comfortably in 16GB RAM and give solid general-purpose performance. For coding, try qwen2.5-coder:7b.' },
-          { question: 'You want to use your Ollama models in an app that uses the OpenAI Python SDK. What do you change?', answer: 'Just change the base_url to http://localhost:11434/v1 and set api_key="ollama". Ollama\'s API is OpenAI-compatible — all the same methods work.' },
-          { question: 'What is the difference between Q4 and F16 quantization?', answer: 'Q4 uses 4 bits per weight (~4x smaller, minor quality loss). F16 uses 16-bit floats (full precision, 4x larger). For everyday use, Q4_K_M is the sweet spot — quality difference is barely noticeable but it fits on consumer hardware.' },
+          {
+            question: 'You have 16 GB of RAM. What should you install?',
+            answer: 'Llama 3.1 8B at Q4 (~6 GB), or Qwen 2.5 Coder 7B if the work is mostly code. Both leave plenty of headroom for the OS. A 14B model would technically load and would make the machine miserable.',
+          },
+          {
+            question: 'Your app uses the OpenAI Python SDK. What changes to point it at Ollama?',
+            answer: 'Two lines: base_url to http://localhost:11434/v1 and api_key to any non-empty string. Every method works unchanged — Ollama implements the same interface.',
+          },
+          {
+            question: 'Q4 versus FP16 — and which should you pull?',
+            answer: 'Q4 is four bits per weight, about a quarter the size, with a mild quality cost. FP16 is full precision and four times larger. Pull Q4 (Ollama\'s default) and spend the saved memory on a bigger model instead.',
+          },
+          {
+            question: 'Generation slowed to a crawl after you pulled a bigger model. What happened?',
+            answer: 'It no longer fits in memory, so the OS is paging it from disk. Drop to a smaller model or a lower quantization — there is no tuning that recovers from swapping.',
+          },
+          {
+            question: 'You need to summarise 500 client contracts. Cloud or local?',
+            answer: 'Local, on both counts. The data is sensitive, and 500 calls is exactly the volume where zero marginal cost matters. Summarising is also well within an 8B model\'s competence.',
+          },
         ]} />
       </Subsection>
 
-      <CheatSheetPanel title="Ollama Quick Reference" items={[
-        { label: 'Install', value: 'Download from ollama.com (Windows/Mac/Linux)' },
-        { label: 'Run model', value: 'ollama run llama3.2' },
-        { label: 'Pull model', value: 'ollama pull llama3.3:70b' },
-        { label: 'List models', value: 'ollama list' },
-        { label: 'API endpoint', value: 'http://localhost:11434 (OpenAI-compatible: /v1)' },
-        { label: 'Open WebUI', value: 'docker run -p 3000:8080 ghcr.io/open-webui/open-webui:main' },
-        { label: '8GB RAM', value: 'phi3:mini, llama3.2:3b, gemma2:2b' },
-        { label: '16GB RAM', value: 'llama3.2, mistral:7b, qwen2.5-coder:7b' },
-        { label: '32GB RAM', value: 'llama3.1:13b, qwen2.5:14b, deepseek-r1:14b' },
-        { label: '64GB RAM', value: 'llama3.3:70b, qwen2.5:32b (near cloud quality)' },
+      <CheatSheetPanel title="Ollama quick reference" items={[
+        { label: 'Install', value: 'ollama.com — one-click on Windows, macOS, Linux' },
+        { label: 'Run', value: 'ollama run llama3.1:8b' },
+        { label: 'Pull / list / inspect', value: 'ollama pull <model> · ollama list · ollama show <model>' },
+        { label: 'Remove', value: 'ollama rm <model>' },
+        { label: 'API', value: 'http://localhost:11434 — OpenAI-compatible at /v1' },
+        { label: 'Chat UI', value: 'docker run -p 3000:8080 ghcr.io/open-webui/open-webui:main' },
+        { label: 'Memory formula', value: 'params × 0.55 GB at Q4, plus ~30% headroom' },
+        { label: '8 GB', value: 'phi3:mini · llama3.2:3b · gemma2:2b' },
+        { label: '16 GB', value: 'llama3.1:8b · mistral:7b · qwen2.5-coder:7b' },
+        { label: '32 GB', value: 'qwen2.5:14b · deepseek-r1:14b · gemma2:27b' },
+        { label: '64 GB', value: 'llama3.3:70b · qwen2.5:32b — near cloud quality' },
       ]} />
     </SectionShell>
   )

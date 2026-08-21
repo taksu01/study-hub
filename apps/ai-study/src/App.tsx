@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
-import {
-  Layers, BookOpen, MessageSquare, Bot, Wrench,
-  Monitor, Plug, Hammer, Sparkles,
-  Menu, X, ChevronRight, Zap, RefreshCw
-} from 'lucide-react'
+import { useCallback, useEffect, useState, type ComponentType } from 'react'
+import { ArrowLeft, ArrowRight, Check, Menu } from 'lucide-react'
+import { SECTIONS } from './data/sections'
+import { useProgress } from './hooks/useProgress'
+import { Sidebar } from './components/Sidebar'
+import { HomePage } from './components/HomePage'
+
 import Section01 from './sections/Section01_BigPicture'
 import Section02 from './sections/Section02_Vocabulary'
 import Section03 from './sections/Section03_Prompting'
@@ -14,203 +15,145 @@ import Section07 from './sections/Section07_Integration'
 import Section08 from './sections/Section08_Projects'
 import Section09 from './sections/Section09_YourStack'
 
-const sections = [
-  { id: 'section-1', num: 1, title: 'The Big Picture', icon: Layers },
-  { id: 'section-2', num: 2, title: 'Core Vocabulary', icon: BookOpen },
-  { id: 'section-3', num: 3, title: 'Prompting Mastery', icon: MessageSquare },
-  { id: 'section-4', num: 4, title: 'The Agent Paradigm', icon: Bot },
-  { id: 'section-5', num: 5, title: 'The Tooling Ecosystem', icon: Wrench },
-  { id: 'section-6', num: 6, title: 'Local AI Setup', icon: Monitor },
-  { id: 'section-7', num: 7, title: 'Integration Patterns', icon: Plug },
-  { id: 'section-8', num: 8, title: 'Project Blueprints', icon: Hammer },
-  { id: 'section-9', num: 9, title: 'Your AI Stack', icon: Sparkles },
-]
+const VIEWS: Record<string, ComponentType> = {
+  'section-1': Section01,
+  'section-2': Section02,
+  'section-3': Section03,
+  'section-4': Section04,
+  'section-5': Section05,
+  'section-6': Section06,
+  'section-7': Section07,
+  'section-8': Section08,
+  'section-9': Section09,
+}
 
-function App() {
+/** `#/section-3` → `section-3`; anything unknown → home. */
+function parseHash(): string | null {
+  const raw = window.location.hash.replace(/^#\/?/, '')
+  return raw && VIEWS[raw] ? raw : null
+}
+
+export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [activeSection, setActiveSection] = useState('section-1')
+  const [activeId, setActiveId] = useState<string | null>(parseHash)
+  const { isDone, toggle, reset, doneCount } = useProgress()
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id)
-          }
-        }
-      },
-      { rootMargin: '-20% 0px -70% 0px' }
-    )
-
-    sections.forEach(s => {
-      const el = document.getElementById(s.id)
-      if (el) observer.observe(el)
-    })
-
-    return () => observer.disconnect()
+    const onHash = () => setActiveId(parseHash())
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
   }, [])
 
-  function scrollTo(id: string) {
-    const el = document.getElementById(id)
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      setSidebarOpen(false)
-    }
-  }
+  const navigate = useCallback((id: string | null) => {
+    window.location.hash = id ? `#/${id}` : '#/'
+    setActiveId(id)
+    // Rendering one section at a time only helps if you land at its top.
+    window.scrollTo({ top: 0, behavior: 'auto' })
+  }, [])
+
+  const idx = activeId ? SECTIONS.findIndex(s => s.id === activeId) : -1
+  const meta = idx >= 0 ? SECTIONS[idx] : null
+  const prev = idx > 0 ? SECTIONS[idx - 1] : null
+  const nextSection = idx >= 0 && idx < SECTIONS.length - 1 ? SECTIONS[idx + 1] : null
+  const View = activeId ? VIEWS[activeId] : null
 
   return (
-    <div className="min-h-screen flex">
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/30 z-30 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+    <div className="min-h-screen">
+      <Sidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        activeId={activeId}
+        onNavigate={navigate}
+        isDone={isDone}
+        doneCount={doneCount}
+        onReset={reset}
+      />
 
-      <aside className={`
-        fixed top-0 left-0 h-full w-72 bg-white border-r border-slate-200 z-40
-        transform transition-transform duration-200 ease-out
-        lg:translate-x-0
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        flex flex-col
-      `}>
-        <div className="p-5 border-b border-slate-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-base font-bold text-slate-900 tracking-tight">AI Mastery Guide</h1>
-              <p className="text-xs text-slate-400 mt-0.5">Interactive Study Dashboard</p>
-            </div>
-            <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-slate-400 hover:text-slate-600 cursor-pointer">
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-        <nav className="flex-1 overflow-y-auto sidebar-scroll p-3">
-          <div className="space-y-0.5">
-            {sections.map(s => {
-              const Icon = s.icon
-              const isActive = activeSection === s.id
-              return (
-                <button
-                  key={s.id}
-                  onClick={() => scrollTo(s.id)}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all cursor-pointer text-sm
-                    ${isActive
-                      ? 'bg-violet-50 text-violet-700 font-medium'
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-800'
-                    }`}
-                >
-                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-violet-500' : 'text-slate-400'}`} />
-                  <span className="truncate">{s.num}. {s.title}</span>
-                </button>
-              )
-            })}
-          </div>
-        </nav>
-        <div className="p-4 border-t border-slate-100">
-          <p className="text-xs text-slate-400 leading-relaxed">
-            A practical guide for developers who want to use, integrate, and build with AI — without needing to be an AI specialist.
-          </p>
-        </div>
-      </aside>
-
-      <main className="flex-1 lg:ml-72 min-h-screen">
+      <main className="lg:ml-72 min-h-screen">
         <div className="lg:hidden sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-slate-200 px-4 py-3 flex items-center gap-3">
-          <button onClick={() => setSidebarOpen(true)} className="text-slate-600 hover:text-slate-800 cursor-pointer">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="text-slate-600 hover:text-slate-800 cursor-pointer"
+            aria-label="Open navigation"
+          >
             <Menu className="w-5 h-5" />
           </button>
-          <span className="text-sm font-medium text-slate-700 truncate">AI Mastery Guide</span>
+          <span className="text-sm font-medium text-slate-700 truncate">
+            {meta ? `${meta.num}. ${meta.title}` : 'AI Mastery Guide'}
+          </span>
         </div>
 
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          {/* Hero */}
-          <div className="mb-16">
-            <div className="mb-8">
-              <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight mb-3">
-                AI Mastery Guide
-              </h1>
-              <p className="text-lg text-slate-500 max-w-2xl leading-relaxed">
-                A practical study dashboard for developers who want to understand, configure, and build with AI — from demystifying jargon to running your own local models and building real AI-powered projects.
-              </p>
-            </div>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+          {View && meta ? (
+            <div key={activeId}>
+              <button
+                onClick={() => navigate(null)}
+                className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-violet-600 mb-6 cursor-pointer transition-colors"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" aria-hidden />All sections
+              </button>
 
-            <div className="grid md:grid-cols-2 gap-4 mb-8">
-              <div className="p-5 rounded-xl border border-slate-200 bg-white shadow-sm">
-                <div className="flex items-center gap-2 mb-3">
-                  <BookOpen className="w-5 h-5 text-violet-500" />
-                  <h3 className="font-semibold text-slate-800">How to Use This Guide</h3>
-                </div>
-                <ul className="space-y-2 text-sm text-slate-600">
-                  <li className="flex items-start gap-2">
-                    <ChevronRight className="w-3.5 h-3.5 text-violet-400 mt-0.5 shrink-0" />
-                    <span>Go in order the first time — each section builds on the last</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <ChevronRight className="w-3.5 h-3.5 text-violet-400 mt-0.5 shrink-0" />
-                    <span>Click every interactive element — flow maps, cards, and term blocks teach through interaction</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <ChevronRight className="w-3.5 h-3.5 text-violet-400 mt-0.5 shrink-0" />
-                    <span>Use the green "Try This Now" boxes — open Claude in another tab and test the prompts live</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <ChevronRight className="w-3.5 h-3.5 text-violet-400 mt-0.5 shrink-0" />
-                    <span>Section 9 is your personal reference — bookmark it for quick lookups</span>
-                  </li>
-                </ul>
-              </div>
-              <div className="p-5 rounded-xl border border-slate-200 bg-white shadow-sm">
-                <div className="flex items-center gap-2 mb-3">
-                  <RefreshCw className="w-5 h-5 text-emerald-500" />
-                  <h3 className="font-semibold text-slate-800">Quick Navigation</h3>
-                </div>
-                <ul className="space-y-2 text-sm text-slate-600">
-                  <li className="flex items-start gap-2">
-                    <ChevronRight className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
-                    <span><strong>Confused by terms?</strong> → Section 2 (vocabulary)</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <ChevronRight className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
-                    <span><strong>Want better AI results?</strong> → Section 3 (prompting)</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <ChevronRight className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
-                    <span><strong>Want to run AI locally?</strong> → Section 6 (Ollama setup)</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <ChevronRight className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
-                    <span><strong>Want to build something?</strong> → Section 8 (project blueprints)</span>
-                  </li>
-                </ul>
+              <View />
+
+              {/* Completion + next */}
+              <div className="mt-12 pt-8 border-t border-slate-200">
+                <button
+                  onClick={() => toggle(meta.id)}
+                  className={`w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border transition-colors cursor-pointer
+                    ${isDone(meta.id)
+                      ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
+                      : 'bg-white border-slate-200 text-slate-600 hover:border-violet-300 hover:text-violet-600'}`}
+                >
+                  <span className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0
+                    ${isDone(meta.id) ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300'}`}>
+                    {isDone(meta.id) && <Check className="w-2.5 h-2.5 text-white" aria-hidden />}
+                  </span>
+                  {isDone(meta.id) ? 'Marked as done' : 'Mark section as done'}
+                </button>
+
+                <nav className="flex flex-col sm:flex-row gap-2 mt-4">
+                  {prev && (
+                    <button
+                      onClick={() => navigate(prev.id)}
+                      className="flex-1 flex items-center gap-2 px-4 py-3 rounded-xl border border-slate-200 bg-white text-left hover:border-violet-300 hover:shadow-sm transition-all cursor-pointer"
+                    >
+                      <ArrowLeft className="w-4 h-4 text-slate-400 shrink-0" aria-hidden />
+                      <span className="min-w-0">
+                        <span className="block text-[11px] text-slate-400">Previous</span>
+                        <span className="block text-sm font-medium text-slate-700 truncate">
+                          {prev.num}. {prev.title}
+                        </span>
+                      </span>
+                    </button>
+                  )}
+                  {nextSection && (
+                    <button
+                      onClick={() => navigate(nextSection.id)}
+                      className="flex-1 flex items-center justify-between gap-2 px-4 py-3 rounded-xl border border-violet-200 bg-violet-50 text-left hover:border-violet-400 hover:shadow-sm transition-all cursor-pointer"
+                    >
+                      <span className="min-w-0">
+                        <span className="block text-[11px] text-violet-500">Next up</span>
+                        <span className="block text-sm font-medium text-violet-800 truncate">
+                          {nextSection.num}. {nextSection.title}
+                        </span>
+                      </span>
+                      <ArrowRight className="w-4 h-4 text-violet-500 shrink-0" aria-hidden />
+                    </button>
+                  )}
+                </nav>
               </div>
             </div>
-
-            <div className="p-4 rounded-xl bg-gradient-to-r from-violet-50 to-purple-50 border border-violet-100">
-              <div className="flex items-start gap-2.5">
-                <Zap className="w-4 h-4 text-violet-500 mt-0.5 shrink-0" />
-                <p className="text-sm text-violet-700 leading-relaxed">
-                  <strong>You don't need to build an LLM to master AI.</strong> The most powerful position for a developer is understanding the full stack conceptually, then focusing energy at the application layer — where models connect to tools, data, and real workflows. That's exactly what this guide teaches.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <Section01 />
-          <Section02 />
-          <Section03 />
-          <Section04 />
-          <Section05 />
-          <Section06 />
-          <Section07 />
-          <Section08 />
-          <Section09 />
+          ) : (
+            <HomePage onNavigate={navigate} isDone={isDone} doneCount={doneCount} />
+          )}
 
           <footer className="mt-16 pt-8 border-t border-slate-200 pb-12">
             <p className="text-sm text-slate-400 text-center">
               AI Mastery Guide — Interactive Study Dashboard
             </p>
-            <p className="text-xs text-slate-300 text-center mt-2">
-              Educational content only. AI capabilities and tools evolve rapidly — verify current model capabilities and API pricing before building.
+            <p className="text-xs text-slate-300 text-center mt-2 max-w-lg mx-auto leading-relaxed">
+              Educational content only. Model capabilities and API pricing move fast — verify both
+              against the provider's own docs before you build on them.
             </p>
           </footer>
         </div>
@@ -218,5 +161,3 @@ function App() {
     </div>
   )
 }
-
-export default App
