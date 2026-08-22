@@ -38,7 +38,7 @@ export default function MerkleTreeView({ transactions }: Props) {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <p className="text-xs text-gray-500 mb-1">Click a transaction to highlight its Merkle path to the root</p>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 text-center">Click a transaction to highlight its Merkle path to the root</p>
 
       {levels.map((level, depth) => (
         <div key={depth} className="flex items-center justify-center gap-2 sm:gap-4 flex-wrap">
@@ -50,16 +50,16 @@ export default function MerkleTreeView({ transactions }: Props) {
                 key={`${depth}-${i}`}
                 className={`rounded-lg border-2 px-3 py-1.5 text-center transition-all duration-200
                   ${isHighlighted
-                    ? 'border-amber-400 bg-amber-50 shadow-md'
+                    ? 'border-amber-400 bg-amber-50 dark:bg-amber-900/20 shadow-md'
                     : isRoot
-                      ? 'border-gray-300 bg-white'
-                      : 'border-gray-200 bg-white'
+                      ? 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900'
+                      : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900'
                   }`}
               >
                 <p className="text-[10px] font-bold text-gray-400 uppercase">
                   {isRoot ? 'Root' : depth === levels.length - 1 ? `H(TX)` : 'H'}
                 </p>
-                <p className="text-[10px] font-mono text-gray-500">{shortHash(node.hash, 6)}</p>
+                <p className="text-[10px] font-mono text-gray-500 dark:text-gray-400">{shortHash(node.hash, 6)}</p>
               </div>
             )
           })}
@@ -76,11 +76,11 @@ export default function MerkleTreeView({ transactions }: Props) {
             onMouseLeave={() => setHighlightedTx(null)}
             className={`rounded-xl border-2 px-3 py-2 text-center transition-all duration-200 cursor-pointer
               ${highlightedTx === i
-                ? 'border-amber-400 bg-amber-100 shadow-md scale-105'
-                : 'border-gray-200 bg-gray-50 hover:border-gray-300'
+                ? 'border-amber-400 bg-amber-100 dark:bg-amber-900/30 shadow-md scale-105'
+                : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600'
               }`}
           >
-            <p className="text-[10px] font-bold text-gray-700">
+            <p className="text-[10px] font-bold text-gray-700 dark:text-gray-300">
               {tx.isCoinbase ? 'Coinbase' : `TX ${i}`}
             </p>
             <p className="text-[9px] font-mono text-gray-400">{shortHash(tx.txid, 6)}</p>
@@ -89,12 +89,12 @@ export default function MerkleTreeView({ transactions }: Props) {
       </div>
 
       {highlightedTx !== null && (
-        <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 max-w-sm text-center">
-          <p className="text-xs text-amber-800">
+        <div className="rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-3 max-w-sm text-center">
+          <p className="text-xs text-amber-800 dark:text-amber-200">
             {transactions[highlightedTx].isCoinbase ? 'Coinbase TX' : `TX ${highlightedTx}`} → hashed up through{' '}
             {levels.length - 1} level{levels.length - 1 !== 1 ? 's' : ''} → <strong>Merkle Root</strong>
           </p>
-          <p className="text-[10px] text-amber-600 mt-1">
+          <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1">
             Changing this TX invalidates every hash up to the root, breaking the block header.
           </p>
         </div>

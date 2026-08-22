@@ -52,18 +52,18 @@ export default function MempoolView() {
   return (
     <div className="space-y-6">
       {/* Create Transaction */}
-      <div className="rounded-xl border border-gray-200 overflow-hidden">
-        <div className="bg-gray-50 px-4 py-2.5 border-b border-gray-200">
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="bg-gray-50 dark:bg-gray-800 px-4 py-2.5 border-b border-gray-200 dark:border-gray-700">
           <p className="text-xs font-bold tracking-widest text-gray-400 uppercase">Create Transaction</p>
         </div>
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">From</label>
+              <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">From</label>
               <select
                 value={from}
                 onChange={e => { setFrom(e.target.value); setError('') }}
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm bg-white dark:bg-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
               >
                 {walletOptions.map(w => (
                   <option key={w.name} value={w.name}>
@@ -73,11 +73,11 @@ export default function MempoolView() {
               </select>
             </div>
             <div>
-              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">To</label>
+              <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">To</label>
               <select
                 value={to}
                 onChange={e => { setTo(e.target.value); setError('') }}
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm bg-white dark:bg-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
               >
                 {recipientOptions.map(w => (
                   <option key={w.name} value={w.name}>{w.name}</option>
@@ -86,27 +86,27 @@ export default function MempoolView() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Amount (BTC)</label>
+              <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">Amount (BTC)</label>
               <input
                 type="number"
                 step="0.0001"
                 min="0.0001"
                 value={amount}
                 onChange={e => { setAmount(e.target.value); setError('') }}
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm font-mono bg-white dark:bg-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
               />
             </div>
             <div>
-              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Fee Rate (sat/vB)</label>
+              <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">Fee Rate (sat/vB)</label>
               <input
                 type="number"
                 step="1"
                 min="1"
                 value={feeRate}
                 onChange={e => { setFeeRate(e.target.value); setError('') }}
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm font-mono bg-white dark:bg-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
               />
               <p className="text-[10px] text-gray-400 mt-0.5">
                 Est. fee: {((parseInt(feeRate, 10) || 0) * 250 / 100000000).toFixed(8)} BTC
@@ -115,12 +115,12 @@ export default function MempoolView() {
           </div>
 
           {error && (
-            <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
+            <p className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2">{error}</p>
           )}
 
           <button
             type="submit"
-            className="w-full py-2.5 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800 transition-colors cursor-pointer shadow-sm"
+            className="w-full py-2.5 rounded-xl bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900 text-sm font-semibold hover:bg-gray-800 dark:hover:bg-white transition-colors cursor-pointer shadow-sm"
           >
             Broadcast Transaction
           </button>
@@ -137,16 +137,16 @@ export default function MempoolView() {
         </div>
 
         {state.mempool.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-gray-300 p-6 text-center">
+          <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 p-6 text-center">
             <p className="text-sm text-gray-400">Mempool is empty</p>
-            <p className="text-[10px] text-gray-300 mt-1">Create a transaction to see it queued here</p>
+            <p className="text-[10px] text-gray-300 dark:text-gray-600 mt-1">Create a transaction to see it queued here</p>
           </div>
         ) : (
           <div className="space-y-2">
             {state.mempool.map((tx, i) => (
-              <div key={tx.txid} className="rounded-xl border border-gray-200 bg-white p-3 flex items-center justify-between gap-3">
+              <div key={tx.txid} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-500 shrink-0">
+                  <div className="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-[10px] font-bold text-gray-500 dark:text-gray-400 shrink-0">
                     {i + 1}
                   </div>
                   <div className="min-w-0">
@@ -157,7 +157,7 @@ export default function MempoolView() {
                   </div>
                 </div>
                 <div className="text-right shrink-0">
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 font-semibold">
                     {tx.feeRate} sat/vB
                   </span>
                   <p className="text-[10px] text-gray-400 mt-0.5">fee: {tx.fee.toFixed(8)}</p>

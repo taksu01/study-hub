@@ -48,11 +48,11 @@ export default function NetworkView() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs font-bold tracking-widest text-gray-400 uppercase">
           Network — {state.nodes.length} nodes
         </p>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={handleAddNode}
             className="px-3 py-1.5 rounded-lg bg-emerald-500 text-white text-xs font-semibold hover:bg-emerald-400 cursor-pointer transition-colors shadow-sm"
@@ -72,7 +72,7 @@ export default function NetworkView() {
       <p className="text-[10px] text-gray-400">Click a node to remove it. Click "Broadcast" to simulate gossip propagation.</p>
 
       {/* Network visualization */}
-      <div className="relative w-full h-72 sm:h-80 bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
+      <div className="relative w-full h-72 sm:h-80 bg-gray-50 dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
         <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
           {state.edges.map(([a, b]) => {
             const na = state.nodes.find(n => n.id === a)
@@ -106,8 +106,8 @@ export default function NetworkView() {
               ${n.lit
                 ? 'bg-amber-400 border-amber-500 text-white shadow-lg scale-110'
                 : hoveredNode === n.id
-                  ? 'bg-red-50 border-red-300 text-red-600 shadow-md scale-105'
-                  : 'bg-white border-gray-300 text-gray-500 group-hover:border-gray-400'
+                  ? 'bg-red-50 dark:bg-red-900/30 border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 shadow-md scale-105'
+                  : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 group-hover:border-gray-400 dark:group-hover:border-gray-500'
               }`}
             >
               {n.id.replace('N', '')}
@@ -120,8 +120,8 @@ export default function NetworkView() {
       </div>
 
       {/* Node info */}
-      <div className="rounded-xl bg-gray-50 border border-gray-200 p-3 text-center">
-        <p className="text-xs text-gray-600">
+      <div className="rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-3 text-center">
+        <p className="text-xs text-gray-600 dark:text-gray-300">
           Each node: <strong>validate</strong> → <strong>add to mempool</strong> → <strong>relay to peers</strong>
         </p>
         <p className="text-[10px] text-gray-400 mt-0.5">

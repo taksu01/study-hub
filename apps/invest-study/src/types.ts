@@ -1,3 +1,41 @@
+export interface Lesson {
+  id: string
+  title: string
+  duration: string
+}
+
+export type ModuleColor = 'indigo' | 'sky' | 'amber' | 'emerald' | 'rose'
+
+export interface Module {
+  id: string
+  number: number
+  title: string
+  tagline: string
+  icon: string
+  color: ModuleColor
+  lessons: Lesson[]
+}
+
+export type ProgressStatus = 'not-started' | 'in-progress' | 'completed'
+
+export interface LessonProgress {
+  status: ProgressStatus
+  lastVisited?: string
+}
+
+export interface AppProgress {
+  lessons: Record<string, LessonProgress>
+  lastVisited?: string
+}
+
+export type AppRoute =
+  | { type: 'home' }
+  | { type: 'lesson'; moduleId: string; lessonId: string }
+
+export type NavigateFn = (route: AppRoute) => void
+
+/* ── Widget prop shapes used by components/ui.tsx ── */
+
 export interface Term {
   term: string
   definition: string
@@ -26,11 +64,6 @@ export interface FlowNode {
   color?: string
 }
 
-export interface CompareColumn {
-  header: string
-  values: string[]
-}
-
 export interface CompareRow {
   attribute: string
   values: string[]
@@ -47,14 +80,7 @@ export interface ExpandableCard {
 
 export interface CauseEffect {
   cause: string
-  arrow?: string
   effect: string
-}
-
-export interface ScenarioOption {
-  label: string
-  description: string
-  outcome: string
 }
 
 export interface MistakeEntry {
@@ -62,12 +88,4 @@ export interface MistakeEntry {
   whyItHappens: string
   whatItLooksLike: string
   whatToDoInstead: string
-}
-
-export interface SectionData {
-  id: string
-  number: number
-  title: string
-  subtitle: string
-  icon: string
 }

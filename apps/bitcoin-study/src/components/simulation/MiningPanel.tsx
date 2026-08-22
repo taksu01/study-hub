@@ -67,47 +67,47 @@ export default function MiningPanel() {
     <div className="space-y-6">
       {/* Mining overview */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="rounded-xl border border-gray-200 p-4 text-center">
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Next Block</p>
-          <p className="text-2xl font-bold text-gray-800 mt-1">#{nextHeight}</p>
+          <p className="text-2xl font-bold text-gray-800 dark:text-gray-200 mt-1">#{nextHeight}</p>
         </div>
-        <div className="rounded-xl border border-gray-200 p-4 text-center">
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Mempool TXs</p>
-          <p className="text-2xl font-bold text-gray-800 mt-1">{state.mempool.length}</p>
+          <p className="text-2xl font-bold text-gray-800 dark:text-gray-200 mt-1">{state.mempool.length}</p>
           <p className="text-[10px] text-gray-400">({Math.min(state.mempool.length, 10)} will be included)</p>
         </div>
-        <div className="rounded-xl border border-gray-200 p-4 text-center">
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Miner Balance</p>
-          <p className="text-2xl font-bold text-amber-600 mt-1">{minerBalance.toFixed(4)}</p>
+          <p className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">{minerBalance.toFixed(4)}</p>
           <p className="text-[10px] text-gray-400">BTC</p>
         </div>
       </div>
 
       {/* Block preview */}
-      <div className="rounded-xl border border-gray-200 overflow-hidden">
-        <div className="bg-gray-50 px-4 py-2.5 border-b border-gray-200">
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="bg-gray-50 dark:bg-gray-800 px-4 py-2.5 border-b border-gray-200 dark:border-gray-700">
           <p className="text-xs font-bold tracking-widest text-gray-400 uppercase">Candidate Block Preview</p>
         </div>
         <div className="p-4 space-y-2">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-gray-500">Prev hash</span>
+            <span className="text-gray-500 dark:text-gray-400">Prev hash</span>
             <span className="font-mono text-gray-400">{shortHash(prevBlock.hash, 12)}</span>
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-gray-500">Subsidy</span>
-            <span className="font-semibold text-amber-600">{subsidy.toFixed(8)} BTC</span>
+            <span className="text-gray-500 dark:text-gray-400">Subsidy</span>
+            <span className="font-semibold text-amber-600 dark:text-amber-400">{subsidy.toFixed(8)} BTC</span>
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-gray-500">Total fees</span>
-            <span className="font-semibold text-amber-600">{totalFees.toFixed(8)} BTC</span>
+            <span className="text-gray-500 dark:text-gray-400">Total fees</span>
+            <span className="font-semibold text-amber-600 dark:text-amber-400">{totalFees.toFixed(8)} BTC</span>
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-gray-500">Block reward</span>
-            <span className="font-bold text-gray-800">{(subsidy + totalFees).toFixed(8)} BTC</span>
+            <span className="text-gray-500 dark:text-gray-400">Block reward</span>
+            <span className="font-bold text-gray-800 dark:text-gray-200">{(subsidy + totalFees).toFixed(8)} BTC</span>
           </div>
 
           {txsToMine.length > 0 && (
-            <div className="mt-3 pt-3 border-t border-gray-100">
+            <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
                 Transactions to include (by fee rate)
               </p>
@@ -116,9 +116,9 @@ export default function MiningPanel() {
                   <div key={tx.txid} className="flex items-center justify-between text-[10px] py-1">
                     <div className="flex items-center gap-2">
                       <span className="text-gray-400">{i + 1}.</span>
-                      <span className="font-mono text-gray-500">{shortHash(tx.txid, 8)}</span>
+                      <span className="font-mono text-gray-500 dark:text-gray-400">{shortHash(tx.txid, 8)}</span>
                     </div>
-                    <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 font-medium">
+                    <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300 font-medium">
                       {tx.feeRate} sat/vB
                     </span>
                   </div>
@@ -130,7 +130,7 @@ export default function MiningPanel() {
       </div>
 
       {/* PoW Simulator */}
-      <div className="rounded-xl bg-gray-900 p-6 text-center">
+      <div className="rounded-xl bg-gray-900 border border-transparent dark:border-gray-700 p-4 sm:p-6 text-center">
         <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Proof of Work — Hash Search</p>
 
         <div className="font-mono text-xs text-gray-500 mb-3 break-all h-5">
@@ -144,7 +144,7 @@ export default function MiningPanel() {
           )}
         </div>
 
-        <div className="flex items-center justify-center gap-4 mb-4">
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mb-4">
           <span className="text-xs text-gray-500">
             Attempts: <span className="text-white font-bold">{hashAttempts}</span>
           </span>
@@ -155,7 +155,7 @@ export default function MiningPanel() {
           )}
         </div>
 
-        <div className="flex gap-3 justify-center">
+        <div className="flex flex-wrap gap-3 justify-center">
           {!state.miningInProgress && !found && (
             <button
               onClick={startMining}

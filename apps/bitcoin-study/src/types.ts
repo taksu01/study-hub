@@ -1,64 +1,36 @@
-export interface KeyTerm {
-  term: string
-  definition: string
+export interface Lesson {
+  id: string
+  title: string
+  duration: string
 }
 
-export interface RecallPrompt {
-  question: string
-  hint: string
-}
+export type ModuleColor = 'amber' | 'sky' | 'orange' | 'emerald' | 'violet' | 'green'
 
-export interface ComparisonRow {
-  aspect: string
-  colA: string
-  colB: string
-}
-
-export interface Section {
+export interface Module {
   id: string
   number: number
   title: string
-  subtitle: string
-  icon: string
-  bigPicture: string
-  whyItMatters: string
-  visual: string
-  simpleExample?: string
-  details: string[]
-  keyTerms: KeyTerm[]
-  commonConfusion: string[]
-  recallPrompts: RecallPrompt[]
-  cheatSheet: string[]
-  comparisonTable?: {
-    title: string
-    colAHeader: string
-    colBHeader: string
-    rows: ComparisonRow[]
-  }
-}
-
-export interface MarketSection {
-  id: string
-  number: number
-  title: string
-  subtitle: string
-  icon: string
   tagline: string
-  audience: 'skeptic' | 'investor' | 'developer' | 'all'
-  bigPicture: string
-  whyItMatters: string
-  simpleExample?: string
-  details: string[]
-  keyTerms: KeyTerm[]
-  commonConfusion: string[]
-  recallPrompts: RecallPrompt[]
-  cheatSheet: string[]
-  visualComponent?: string
-  investorTakeaway?: string
-  comparisonTable?: {
-    title: string
-    colAHeader: string
-    colBHeader: string
-    rows: ComparisonRow[]
-  }
+  icon: string
+  color: ModuleColor
+  lessons: Lesson[]
 }
+
+export type ProgressStatus = 'not-started' | 'in-progress' | 'completed'
+
+export interface LessonProgress {
+  status: ProgressStatus
+  lastVisited?: string
+}
+
+export interface AppProgress {
+  lessons: Record<string, LessonProgress>
+  lastVisited?: string
+}
+
+export type AppRoute =
+  | { type: 'home' }
+  | { type: 'lesson'; moduleId: string; lessonId: string }
+  | { type: 'lab' }
+
+export type NavigateFn = (route: AppRoute) => void
